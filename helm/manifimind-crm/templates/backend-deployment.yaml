@@ -1,0 +1,103 @@
+{{- if .Values.backend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "manifimind-crm.fullname" . }}-backend
+  labels:
+    app: {{ include "manifimind-crm.name" . }}
+    component: backend
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "manifimind-crm.name" . }}
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: {{ include "manifimind-crm.name" . }}
+        component: backend
+    spec:
+      initContainers:
+      # Wait for database to be ready
+      - name: wait-for-database
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for database to be ready..."
+          for i in $(seq 1 {{ .Values.initContainers.database.maxAttempts }}); do
+            nc -z {{ .Values.backend.env.DB_HOST }} {{ .Values.backend.env.DB_PORT }} && echo "Database is ready!" && exit 0
+            echo "Waiting for database... attempt $i/{{ .Values.initContainers.database.maxAttempts }}"
+            sleep {{ .Values.initContainers.database.checkInterval }}
+          done
+          echo "Database failed to become ready in time"
+          exit 1
+      containers:
+      - name: backend
+        image: "{{ .Values.global.registry }}/{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        ports:
+        - containerPort: {{ .Values.backend.env.PORT }}
+          name: http
+        env:
+        - name: PORT
+          value: {{ .Values.backend.env.PORT | quote }}
+        - name: GIN_MODE
+          value: {{ .Values.backend.env.GIN_MODE | quote }}
+        - name: DB_HOST
+          value: {{ .Values.backend.env.DB_HOST | quote }}
+        - name: DB_PORT
+          value: {{ .Values.backend.env.DB_PORT | quote }}
+        - name: DB_USER
+          value: {{ .Values.backend.env.DB_USER | quote }}
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "manifimind-crm.fullname" . }}-secrets
+              key: db-password
+        - name: DB_NAME
+          value: {{ .Values.backend.env.DB_NAME | quote }}
+        - name: DB_SSL_MODE
+          value: {{ .Values.backend.env.DB_SSL_MODE | quote }}
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "manifimind-crm.fullname" . }}-secrets
+              key: jwt-secret
+        - name: JWT_EXPIRATION_HOURS
+          value: {{ .Values.backend.env.JWT_EXPIRATION_HOURS | quote }}
+        - name: MASTER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "manifimind-crm.fullname" . }}-secrets
+              key: master-password
+        - name: AWS_REGION
+          value: {{ .Values.backend.env.AWS_REGION | quote }}
+        - name: AWS_ACCESS_KEY_ID
+          value: {{ .Values.backend.env.AWS_ACCESS_KEY_ID | quote }}
+        - name: AWS_SECRET_ACCESS_KEY
+          value: {{ .Values.backend.env.AWS_SECRET_ACCESS_KEY | quote }}
+        - name: SES_FROM_EMAIL
+          value: {{ .Values.backend.env.SES_FROM_EMAIL | quote }}
+        resources:
+          {{- toYaml .Values.backend.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+{{- end }}

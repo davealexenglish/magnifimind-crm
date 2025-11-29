@@ -9,12 +9,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/davealexenglish/magnifimind-crm/internal/database"
 	"github.com/davealexenglish/magnifimind-crm/internal/handlers"
 	"github.com/davealexenglish/magnifimind-crm/internal/middleware"
 	"github.com/davealexenglish/magnifimind-crm/internal/services"
 	"github.com/davealexenglish/magnifimind-crm/pkg/config"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -36,6 +36,7 @@ func main() {
 	// Initialize repositories
 	userRepo := database.NewUserRepository(db)
 	personRepo := database.NewPersonRepository(db)
+	passwordRepo := database.NewPasswordRepository(db)
 
 	// Initialize email service
 	devMode := !cfg.HasAWSCredentials()
@@ -57,6 +58,8 @@ func main() {
 	authHandler := handlers.NewAuthHandler(userRepo, emailService, cfg)
 	userHandler := handlers.NewUserHandler(userRepo)
 	personHandler := handlers.NewPersonHandler(personRepo)
+	passwordHandler := handlers.NewPasswordHandler(passwordRepo)
+	tableHandler := handlers.NewTableHandler(db)
 
 	// Initialize router
 	router := gin.Default()
@@ -132,16 +135,67 @@ func main() {
 			personRoutes.GET("/search", personHandler.SearchPersons)
 		}
 
-		// TODO: Add more CRUD routes for other tables:
-		// - Addresses (pdat_address)
-		// - Emails (pdat_pers_emails)
-		// - Phones (pdat_pers_phone)
-		// - Calendar (pdat_calendar)
-		// - Links (pdat_links)
-		// - Passwords (pdat_passwd)
-		// - Roles (sec_roles)
-		// - Privileges (sec_privileges)
-		// etc.
+		// Password Vault routes (client-side encryption only!)
+		passwordRoutes := v1.Group("/passwords")
+		passwordRoutes.Use(middleware.AuthMiddleware(cfg.JWT.Secret))
+		{
+			passwordRoutes.GET("", passwordHandler.ListPasswords)
+			passwordRoutes.GET("/:id", passwordHandler.GetPassword)
+			passwordRoutes.POST("", passwordHandler.CreatePassword)
+			passwordRoutes.PUT("/:id", passwordHandler.UpdatePassword)
+			passwordRoutes.DELETE("/:id", passwordHandler.DeletePassword)
+			passwordRoutes.GET("/search", passwordHandler.SearchPasswords)
+		}
+
+		// Generic table routes (protected)
+		protected := v1.Group("")
+		protected.Use(middleware.AuthMiddleware(cfg.JWT.Secret))
+		{
+			// People (using generic handler)
+			protected.GET("/people", tableHandler.ListRecords("people"))
+			protected.GET("/people/:id", tableHandler.GetRecord("people"))
+			protected.DELETE("/people/:id", tableHandler.DeleteRecord("people"))
+
+			// Addresses
+			protected.GET("/addresses", tableHandler.ListRecords("addresses"))
+			protected.GET("/addresses/:id", tableHandler.GetRecord("addresses"))
+			protected.DELETE("/addresses/:id", tableHandler.DeleteRecord("addresses"))
+
+			// Emails
+			protected.GET("/emails", tableHandler.ListRecords("emails"))
+			protected.GET("/emails/:id", tableHandler.GetRecord("emails"))
+			protected.DELETE("/emails/:id", tableHandler.DeleteRecord("emails"))
+
+			// Phones
+			protected.GET("/phones", tableHandler.ListRecords("phones"))
+			protected.GET("/phones/:id", tableHandler.GetRecord("phones"))
+			protected.DELETE("/phones/:id", tableHandler.DeleteRecord("phones"))
+
+			// Notes
+			protected.GET("/notes", tableHandler.ListRecords("notes"))
+			protected.GET("/notes/:id", tableHandler.GetRecord("notes"))
+			protected.DELETE("/notes/:id", tableHandler.DeleteRecord("notes"))
+
+			// Links
+			protected.GET("/links", tableHandler.ListRecords("links"))
+			protected.GET("/links/:id", tableHandler.GetRecord("links"))
+			protected.DELETE("/links/:id", tableHandler.DeleteRecord("links"))
+
+			// Accounts
+			protected.GET("/accounts", tableHandler.ListRecords("accounts"))
+			protected.GET("/accounts/:id", tableHandler.GetRecord("accounts"))
+			protected.DELETE("/accounts/:id", tableHandler.DeleteRecord("accounts"))
+
+			// Users (table view)
+			protected.GET("/users-table", tableHandler.ListRecords("users"))
+			protected.GET("/users-table/:id", tableHandler.GetRecord("users"))
+			protected.DELETE("/users-table/:id", tableHandler.DeleteRecord("users"))
+
+			// Roles
+			protected.GET("/roles", tableHandler.ListRecords("roles"))
+			protected.GET("/roles/:id", tableHandler.GetRecord("roles"))
+			protected.DELETE("/roles/:id", tableHandler.DeleteRecord("roles"))
+		}
 	}
 
 	// Create HTTP server with timeouts

@@ -1,0 +1,16 @@
+apiVersion: v2
+name: manifimind-crm
+description: Manifimind CRM - Complete CRM system with password vault
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - crm
+  - password-vault
+  - encryption
+  - react
+  - golang
+  - postgresql
+maintainers:
+  - name: Dave English
+    email: dave@manifimind.com

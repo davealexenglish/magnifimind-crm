@@ -1,0 +1,91 @@
+# Default values for manifimind-crm
+# This is a YAML-formatted file.
+
+# Global settings
+global:
+  registry: t5810.webcentricds.net
+  imagePullPolicy: Always
+
+# Database configuration
+database:
+  enabled: true
+  image:
+    repository: manifimind-crm-database
+    tag: latest
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: ""  # Use default storage class
+  env:
+    POSTGRES_DB: manifimind_crm
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres  # Change in production!
+
+# Backend configuration
+backend:
+  enabled: true
+  image:
+    repository: manifimind-crm-backend
+    tag: latest
+  replicas: 1
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "500m"
+  service:
+    type: ClusterIP
+    port: 8080
+  env:
+    PORT: "8080"
+    GIN_MODE: release
+    DB_HOST: manifimind-crm-database
+    DB_PORT: "5432"
+    DB_USER: postgres
+    DB_PASSWORD: postgres  # Change in production!
+    DB_NAME: manifimind_crm
+    DB_SSL_MODE: disable
+    JWT_SECRET: change-this-jwt-secret-in-production
+    JWT_EXPIRATION_HOURS: "24"
+    MASTER_PASSWORD: change-this-master-password  # CRITICAL!
+    AWS_REGION: us-east-1
+    AWS_ACCESS_KEY_ID: ""
+    AWS_SECRET_ACCESS_KEY: ""
+    SES_FROM_EMAIL: noreply@manifimind.com
+
+# Frontend configuration
+frontend:
+  enabled: true
+  image:
+    repository: manifimind-crm-frontend
+    tag: latest
+  replicas: 1
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "200m"
+  service:
+    type: NodePort
+    port: 80
+    nodePort: 30081  # Accessible externally on minikube
+
+# Init container wait times
+initContainers:
+  database:
+    checkInterval: 5
+    maxAttempts: 30
+  backend:
+    checkInterval: 5
+    maxAttempts: 20

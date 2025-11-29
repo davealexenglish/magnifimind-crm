@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  database:
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    image: manifimind-crm-database:latest
+    container_name: manifimind-db
+    environment:
+      POSTGRES_DB: manifimind_crm
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - manifimind-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: manifimind-crm-backend:latest
+    container_name: manifimind-backend
+    environment:
+      PORT: 8080
+      GIN_MODE: release
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: manifimind_crm
+      DB_SSL_MODE: disable
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+      JWT_EXPIRATION_HOURS: 24
+      MASTER_PASSWORD: ${MASTER_PASSWORD:-change-this-master-password}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      SES_FROM_EMAIL: ${SES_FROM_EMAIL:-noreply@manifimind.com}
+    ports:
+      - "8080:8080"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - manifimind-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: manifimind-crm-frontend:latest
+    container_name: manifimind-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - manifimind-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+networks:
+  manifimind-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local

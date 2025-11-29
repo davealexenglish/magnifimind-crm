@@ -13,6 +13,7 @@ type Config struct {
 	Database DatabaseConfig
 	JWT      JWTConfig
 	AWS      AWSConfig
+	Crypto   CryptoConfig
 }
 
 // ServerConfig holds server-related configuration
@@ -45,6 +46,11 @@ type AWSConfig struct {
 	SecretAccessKey string
 }
 
+// CryptoConfig holds encryption-related configuration
+type CryptoConfig struct {
+	MasterPassword string
+}
+
 // Load loads configuration from environment variables
 func Load() *Config {
 	// Try to load .env file (ignore error if not exists)
@@ -72,6 +78,9 @@ func Load() *Config {
 			Region:          getEnv("AWS_REGION", "us-east-1"),
 			AccessKeyID:     getEnv("AWS_ACCESS_KEY_ID", ""),
 			SecretAccessKey: getEnv("AWS_SECRET_ACCESS_KEY", ""),
+		},
+		Crypto: CryptoConfig{
+			MasterPassword: getEnv("MASTER_PASSWORD", ""),
 		},
 	}
 }

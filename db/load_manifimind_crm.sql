@@ -19842,7 +19842,7 @@ INSERT INTO sec_accounts (sec_accounts_id, name, password, sec_users_id, create_
   ('10', 'denglish_business', 'denglish_business', '7', '2006-09-24 17:58:11.543261+00', 'DENGLISH', '2006-09-24 18:10:13.38387+00', 'DENGLISH'),
   ('11', 'comspec', 'comspec', '9', '2006-10-11 16:00:38.526246+00', 'DENGLISH', '2006-10-11 16:00:38.526246+00', 'DENGLISH'),
   ('8', 'dfitzgerald', 's0cc3r', '5', '2005-09-06 14:55:50.339693+00', 'DENGLISH', '2007-07-22 21:51:52.4351+00', 'DENGLISH'),
-  ('2', 'denglish', 'Nad#Waggon', '2', '2005-07-04 11:58:25.507586+00', 'INSERT_SCRIPT', '2007-12-11 02:14:01.092772+00', 'INSERT_SCRIPT'),
+  ('2', 'denglish', '$2a$10$Ieo2RNPeFGSFSGCruY9laeeQWEgltQfOmF42NI0o0VmXIcka2iWfC', '2', '2005-07-04 11:58:25.507586+00', 'INSERT_SCRIPT', '2007-12-11 02:14:01.092772+00', 'INSERT_SCRIPT'),
   ('12', 'bhasden', 'hello!', '10', '2008-07-20 20:42:51.015201+00', 'DENGLISH', '2008-07-20 20:42:51.015201+00', 'DENGLISH');
 
 -- Data for sec_acct_roles

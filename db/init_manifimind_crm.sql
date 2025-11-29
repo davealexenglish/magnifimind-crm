@@ -275,7 +275,7 @@ CREATE TABLE pdat_phone_type (
 CREATE TABLE sec_accounts (
     sec_accounts_id integer DEFAULT nextval(('"sec_accounts_sec_accounts_i_seq"'::text)::regclass) NOT NULL,
     name character varying(50) NOT NULL,
-    password character varying(50) NOT NULL,
+    password character varying(100) NOT NULL,
     sec_users_id integer NOT NULL,
     create_date timestamp with time zone NOT NULL,
     create_user character varying(20) NOT NULL,
