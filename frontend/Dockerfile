@@ -1,14 +1,18 @@
 # Multi-stage Dockerfile for React frontend
 # Stage 1: Build
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install ALL dependencies (including dev dependencies needed for build)
-RUN npm install
+# Install ALL dependencies (including dev dependencies and optional dependencies needed for build)
+# Use clean install to ensure optional dependencies are properly installed
+RUN npm ci --include=optional || npm install --include=optional
+
+# Explicitly install rollup platform-specific binary for Alpine Linux
+RUN npm install --no-save @rollup/rollup-linux-x64-musl
 
 # Copy source code
 COPY . .

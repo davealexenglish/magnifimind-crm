@@ -1,20 +1,21 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import axios, { type AxiosError } from 'axios'
+import type { LoginProps } from '../types'
 
-function Login({ onLogin }) {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
+function Login({ onLogin }: LoginProps) {
+  const [username, setUsername] = useState<string>('')
+  const [password, setPassword] = useState<string>('')
+  const [showPassword, setShowPassword] = useState<boolean>(false)
+  const [error, setError] = useState<string>('')
   const navigate = useNavigate()
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
 
     try {
-      const response = await axios.post('/api/v1/auth/login', {
+      const response = await axios.post<{ token: string }>('/api/v1/auth/login', {
         username,
         password
       })
@@ -25,7 +26,8 @@ function Login({ onLogin }) {
         navigate('/dashboard')
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed')
+      const error = err as AxiosError<{ error: string }>
+      setError(error.response?.data?.error || 'Login failed')
       console.error('Login error:', err)
     }
   }

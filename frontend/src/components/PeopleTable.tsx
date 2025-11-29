@@ -1,13 +1,14 @@
 import TableManager from './TableManager'
+import type { TableColumn } from '../types'
 
 function PeopleTable() {
-  const columns = [
+  const columns: TableColumn[] = [
     { field: 'pdat_person_id', label: 'ID', readOnly: true },
-    { field: 'first_name', label: 'First Name' },
-    { field: 'middle_name', label: 'Middle Name' },
-    { field: 'last_name', label: 'Last Name' },
-    { field: 'suffix', label: 'Suffix' },
-    { field: 'nickname', label: 'Nickname' },
+    { field: 'fname', label: 'First Name' },
+    { field: 'lname', label: 'Last Name' },
+    { field: 'birthday', label: 'Birthday', type: 'date' },
+    { field: 'business_flag', label: 'Business' },
+    { field: 'sec_users_id', label: 'User ID', type: 'number' },
     { field: 'create_date', label: 'Created', type: 'date', readOnly: true },
     { field: 'modify_date', label: 'Modified', type: 'date', readOnly: true },
   ]

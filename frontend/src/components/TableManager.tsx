@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import axios, { type AxiosError } from 'axios'
+import type { TableManagerProps, GenericRecord } from '../types'
 
-function TableManager({ title, apiEndpoint, columns, idField }) {
-  const [records, setRecords] = useState([])
-  const [filteredRecords, setFilteredRecords] = useState([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [editingRecord, setEditingRecord] = useState(null)
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [formData, setFormData] = useState({})
+function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProps) {
+  const [records, setRecords] = useState<GenericRecord[]>([])
+  const [filteredRecords, setFilteredRecords] = useState<GenericRecord[]>([])
+  const [searchTerm, setSearchTerm] = useState<string>('')
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string>('')
+  const [editingRecord, setEditingRecord] = useState<string | number | null>(null)
+  const [showAddForm, setShowAddForm] = useState<boolean>(false)
+  const [formData, setFormData] = useState<GenericRecord>({})
   const navigate = useNavigate()
 
   // Fetch records
@@ -38,24 +39,25 @@ function TableManager({ title, apiEndpoint, columns, idField }) {
     setError('')
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.get(`/api/v1/${apiEndpoint}`, {
+      const response = await axios.get<GenericRecord[]>(`/api/v1/${apiEndpoint}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setRecords(response.data)
       setFilteredRecords(response.data)
     } catch (err) {
-      if (err.response?.status === 401) {
+      const error = err as AxiosError<{ error: string }>
+      if (error.response?.status === 401) {
         localStorage.removeItem('token')
         navigate('/login')
       } else {
-        setError(err.response?.data?.error || 'Failed to fetch records')
+        setError(error.response?.data?.error || 'Failed to fetch records')
       }
     } finally {
       setLoading(false)
     }
   }
 
-  const handleEdit = (record) => {
+  const handleEdit = (record: GenericRecord) => {
     setEditingRecord(record[idField])
     setFormData({ ...record })
     setShowAddForm(false)
@@ -63,7 +65,7 @@ function TableManager({ title, apiEndpoint, columns, idField }) {
 
   const handleAdd = () => {
     setEditingRecord(null)
-    const initialData = {}
+    const initialData: GenericRecord = {}
     columns.forEach(col => {
       if (!col.readOnly) {
         initialData[col.field] = col.type === 'checkbox' ? false : ''
@@ -93,11 +95,12 @@ function TableManager({ title, apiEndpoint, columns, idField }) {
       setFormData({})
       fetchRecords()
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to save record')
+      const error = err as AxiosError<{ error: string }>
+      setError(error.response?.data?.error || 'Failed to save record')
     }
   }
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string | number) => {
     if (!confirm('Are you sure you want to delete this record?')) return
 
     setError('')
@@ -108,7 +111,8 @@ function TableManager({ title, apiEndpoint, columns, idField }) {
       })
       fetchRecords()
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to delete record')
+      const error = err as AxiosError<{ error: string }>
+      setError(error.response?.data?.error || 'Failed to delete record')
     }
   }
 
@@ -118,11 +122,11 @@ function TableManager({ title, apiEndpoint, columns, idField }) {
     setFormData({})
   }
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const formatValue = (value, type) => {
+  const formatValue = (value: any, type?: string): string => {
     if (value === null || value === undefined) return ''
     if (type === 'date' && value) {
       return new Date(value).toLocaleString()
@@ -188,7 +192,7 @@ function TableManager({ title, apiEndpoint, columns, idField }) {
             type="text"
             placeholder="Search..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
             style={{
               flex: 1,
               minWidth: '300px',
@@ -236,7 +240,7 @@ function TableManager({ title, apiEndpoint, columns, idField }) {
                   {col.type === 'textarea' ? (
                     <textarea
                       value={formData[col.field] || ''}
-                      onChange={(e) => handleInputChange(col.field, e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleInputChange(col.field, e.target.value)}
                       rows={3}
                       style={{
                         width: '100%',
@@ -249,14 +253,14 @@ function TableManager({ title, apiEndpoint, columns, idField }) {
                     <input
                       type="checkbox"
                       checked={formData[col.field] || false}
-                      onChange={(e) => handleInputChange(col.field, e.target.checked)}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(col.field, e.target.checked)}
                       style={{ width: '20px', height: '20px' }}
                     />
                   ) : (
                     <input
                       type={col.type || 'text'}
                       value={formData[col.field] || ''}
-                      onChange={(e) => handleInputChange(col.field, e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(col.field, e.target.value)}
                       style={{
                         width: '100%',
                         padding: '0.5rem',
