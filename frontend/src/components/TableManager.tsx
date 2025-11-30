@@ -12,12 +12,33 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
   const [editingRecord, setEditingRecord] = useState<string | number | null>(null)
   const [showAddForm, setShowAddForm] = useState<boolean>(false)
   const [formData, setFormData] = useState<GenericRecord>({})
+  const [lookupData, setLookupData] = useState<{ [key: string]: GenericRecord[] }>({})
   const navigate = useNavigate()
 
   // Fetch records
   useEffect(() => {
     fetchRecords()
+    fetchLookupData()
   }, [apiEndpoint])
+
+  // Fetch lookup data for dropdowns
+  const fetchLookupData = async () => {
+    const lookupColumns = columns.filter(col => col.type === 'select' && col.lookupEndpoint)
+
+    for (const col of lookupColumns) {
+      if (!col.lookupEndpoint) continue
+
+      try {
+        const token = localStorage.getItem('token')
+        const response = await axios.get<GenericRecord[]>(`/api/v1/${col.lookupEndpoint}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setLookupData(prev => ({ ...prev, [col.field]: response.data }))
+      } catch (err) {
+        console.error(`Failed to fetch lookup data for ${col.field}:`, err)
+      }
+    }
+  }
 
   // Filter records when search term changes
   useEffect(() => {
@@ -256,6 +277,27 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
                       onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(col.field, e.target.checked)}
                       style={{ width: '20px', height: '20px' }}
                     />
+                  ) : col.type === 'select' ? (
+                    <select
+                      value={formData[col.field] || ''}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => handleInputChange(col.field, e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px'
+                      }}
+                    >
+                      <option value="">Select {col.label}</option>
+                      {lookupData[col.field]?.map(option => (
+                        <option
+                          key={option[col.lookupValue || 'id']}
+                          value={option[col.lookupValue || 'id']}
+                        >
+                          {option[col.lookupLabel || 'name']}
+                        </option>
+                      ))}
+                    </select>
                   ) : (
                     <input
                       type={col.type || 'text'}
@@ -319,7 +361,7 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
-                  {columns.map(col => (
+                  {columns.filter(col => col.showInTable !== false).map(col => (
                     <th key={col.field} style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#213547' }}>
                       {col.label}
                     </th>
@@ -330,7 +372,7 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
               <tbody>
                 {filteredRecords.map((record, idx) => (
                   <tr key={record[idField] || idx} style={{ borderBottom: '1px solid #e0e0e0' }}>
-                    {columns.map(col => (
+                    {columns.filter(col => col.showInTable !== false).map(col => (
                       <td key={col.field} style={{ padding: '1rem', color: '#213547' }}>
                         {formatValue(record[col.field], col.type)}
                       </td>

@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 
 	"github.com/davealexenglish/magnifimind-crm/internal/database"
+	"github.com/davealexenglish/magnifimind-crm/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,55 +22,76 @@ func NewTableHandler(db *database.DB) *TableHandler {
 
 // TableConfig defines configuration for a table
 type TableConfig struct {
-	TableName  string
-	IDColumn   string
-	Columns    []string
-	OrderBy    string
-	CreateUser bool // Whether to track create/modify user
+	TableName   string
+	IDColumn    string
+	Columns     []string
+	OrderBy     string
+	CreateUser  bool   // Whether to track create/modify user
+	MultiTenant bool   // Whether to filter by sec_users_id
+	UseView     bool   // Whether to use a view instead of base table
+	ViewName    string // Name of the view if UseView is true
 }
 
 var tableConfigs = map[string]TableConfig{
 	"people": {
-		TableName:  "pdat_person",
-		IDColumn:   "pdat_person_id",
-		Columns:    []string{"pdat_person_id", "fname", "lname", "birthday", "business_flag", "sec_users_id", "create_date", "create_user", "modify_date", "modify_user", "active_flag"},
-		OrderBy:    "lname, fname",
-		CreateUser: true,
+		TableName:   "v_active_people",
+		IDColumn:    "pdat_person_id",
+		Columns:     []string{"pdat_person_id", "fname", "lname", "full_name", "birthday", "business_flag", "sec_users_id", "create_date", "create_user", "modify_date", "modify_user", "active_flag"},
+		OrderBy:     "lname, fname",
+		CreateUser:  true,
+		MultiTenant: true,
+		UseView:     true,
+		ViewName:    "v_active_people",
 	},
 	"addresses": {
-		TableName:  "pdat_address",
-		IDColumn:   "pdat_address_id",
-		Columns:    []string{"pdat_address_id", "addr1", "addr2", "city", "cmn_states_id", "zip", "zip_plus_4", "country", "pdat_person_id", "create_date", "create_user", "modify_date", "modify_user", "active_flag"},
-		OrderBy:    "pdat_address_id",
-		CreateUser: true,
+		TableName:   "v_person_addresses",
+		IDColumn:    "pdat_address_id",
+		Columns:     []string{"pdat_address_id", "addr1", "addr2", "city", "cmn_states_id", "zip", "zip_plus_4", "country", "pdat_person_id", "person_fname", "person_lname", "person_full_name", "sec_users_id", "create_date", "create_user", "modify_date", "modify_user", "active_flag"},
+		OrderBy:     "person_lname, person_fname",
+		CreateUser:  true,
+		MultiTenant: true,
+		UseView:     true,
+		ViewName:    "v_person_addresses",
 	},
 	"emails": {
-		TableName:  "pdat_pers_emails",
-		IDColumn:   "pdat_pers_emails_id",
-		Columns:    []string{"pdat_pers_emails_id", "email_addr", "pdat_person_id", "pdat_email_types_id", "create_date", "create_user", "modify_date", "modify_user", "active_flag"},
-		OrderBy:    "pdat_pers_emails_id",
-		CreateUser: true,
+		TableName:   "v_person_emails",
+		IDColumn:    "pdat_pers_emails_id",
+		Columns:     []string{"pdat_pers_emails_id", "email_addr", "pdat_person_id", "pdat_email_types_id", "email_type_name", "person_fname", "person_lname", "person_full_name", "sec_users_id", "create_date", "create_user", "modify_date", "modify_user", "active_flag"},
+		OrderBy:     "person_lname, person_fname",
+		CreateUser:  true,
+		MultiTenant: true,
+		UseView:     true,
+		ViewName:    "v_person_emails",
 	},
 	"phones": {
-		TableName:  "pdat_pers_phone",
-		IDColumn:   "pdat_pers_phone_id",
-		Columns:    []string{"pdat_pers_phone_id", "phone_num", "phone_ext", "country_code", "pdat_phone_type_id", "pdat_person_id", "create_date", "create_user", "modify_date", "modify_user", "active_flag"},
-		OrderBy:    "pdat_pers_phone_id",
-		CreateUser: true,
+		TableName:   "v_person_phones",
+		IDColumn:    "pdat_pers_phone_id",
+		Columns:     []string{"pdat_pers_phone_id", "phone_num", "phone_ext", "country_code", "pdat_phone_type_id", "phone_type_name", "pdat_person_id", "person_fname", "person_lname", "person_full_name", "sec_users_id", "create_date", "create_user", "modify_date", "modify_user", "active_flag"},
+		OrderBy:     "person_lname, person_fname",
+		CreateUser:  true,
+		MultiTenant: true,
+		UseView:     true,
+		ViewName:    "v_person_phones",
 	},
 	"notes": {
-		TableName:  "pdat_pers_notes",
-		IDColumn:   "pdat_pers_notes_id",
-		Columns:    []string{"pdat_pers_notes_id", "pdat_person_id", "note_text", "create_date", "create_user", "modify_date", "modify_user", "active_flag"},
-		OrderBy:    "create_date DESC",
-		CreateUser: true,
+		TableName:   "v_person_notes",
+		IDColumn:    "pdat_pers_notes_id",
+		Columns:     []string{"pdat_pers_notes_id", "pdat_person_id", "note_text", "person_fname", "person_lname", "person_full_name", "sec_users_id", "create_date", "create_user", "modify_date", "modify_user", "active_flag"},
+		OrderBy:     "create_date DESC",
+		CreateUser:  true,
+		MultiTenant: true,
+		UseView:     true,
+		ViewName:    "v_person_notes",
 	},
 	"links": {
-		TableName:  "pdat_links",
-		IDColumn:   "pdat_links_id",
-		Columns:    []string{"pdat_links_id", "link_text", "link_url", "note", "pdat_person_id", "create_date", "create_user", "modify_date", "modify_user"},
-		OrderBy:    "pdat_links_id",
-		CreateUser: true,
+		TableName:   "v_person_links",
+		IDColumn:    "pdat_links_id",
+		Columns:     []string{"pdat_links_id", "link_text", "link_url", "note", "pdat_person_id", "person_fname", "person_lname", "person_full_name", "sec_users_id", "create_date", "create_user", "modify_date", "modify_user", "active_flag"},
+		OrderBy:     "person_lname, person_fname",
+		CreateUser:  true,
+		MultiTenant: true,
+		UseView:     true,
+		ViewName:    "v_person_links",
 	},
 	"accounts": {
 		TableName:  "sec_accounts",
@@ -91,6 +114,22 @@ var tableConfigs = map[string]TableConfig{
 		OrderBy:    "name",
 		CreateUser: true,
 	},
+	"email-types": {
+		TableName:   "pdat_email_types",
+		IDColumn:    "pdat_email_types_id",
+		Columns:     []string{"pdat_email_types_id", "name", "sec_users_id", "create_date", "create_user", "modify_date", "modify_user", "active_flag"},
+		OrderBy:     "name",
+		CreateUser:  true,
+		MultiTenant: false, // Global reference data, not tenant-specific
+	},
+	"phone-types": {
+		TableName:   "pdat_phone_type",
+		IDColumn:    "pdat_phone_type_id",
+		Columns:     []string{"pdat_phone_type_id", "name", "sec_users_id", "create_date", "create_user", "modify_date", "modify_user", "active_flag"},
+		OrderBy:     "name",
+		CreateUser:  true,
+		MultiTenant: false, // Global reference data, not tenant-specific
+	},
 }
 
 // ListRecords returns all records from a table
@@ -102,8 +141,26 @@ func (h *TableHandler) ListRecords(tableKey string) gin.HandlerFunc {
 			return
 		}
 
-		query := fmt.Sprintf("SELECT * FROM %s ORDER BY %s", config.TableName, config.OrderBy)
-		rows, err := h.db.Query(query)
+		// Build query with multi-tenant filtering if enabled
+		var query string
+		var err error
+		var rows *sql.Rows
+
+		if config.MultiTenant {
+			// Get user ID from JWT context
+			userID, ok := middleware.GetUserID(c)
+			if !ok {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+				return
+			}
+
+			query = fmt.Sprintf("SELECT * FROM %s WHERE sec_users_id = $1 ORDER BY %s", config.TableName, config.OrderBy)
+			rows, err = h.db.Query(query, userID)
+		} else {
+			query = fmt.Sprintf("SELECT * FROM %s ORDER BY %s", config.TableName, config.OrderBy)
+			rows, err = h.db.Query(query)
+		}
+
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -156,9 +213,27 @@ func (h *TableHandler) GetRecord(tableKey string) gin.HandlerFunc {
 		}
 
 		id := c.Param("id")
-		query := fmt.Sprintf("SELECT * FROM %s WHERE %s = $1", config.TableName, config.IDColumn)
 
-		rows, err := h.db.Query(query, id)
+		// Build query with multi-tenant filtering if enabled
+		var query string
+		var err error
+		var rows *sql.Rows
+
+		if config.MultiTenant {
+			// Get user ID from JWT context
+			userID, ok := middleware.GetUserID(c)
+			if !ok {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+				return
+			}
+
+			query = fmt.Sprintf("SELECT * FROM %s WHERE %s = $1 AND sec_users_id = $2", config.TableName, config.IDColumn)
+			rows, err = h.db.Query(query, id, userID)
+		} else {
+			query = fmt.Sprintf("SELECT * FROM %s WHERE %s = $1", config.TableName, config.IDColumn)
+			rows, err = h.db.Query(query, id)
+		}
+
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -209,9 +284,57 @@ func (h *TableHandler) DeleteRecord(tableKey string) gin.HandlerFunc {
 		}
 
 		id := c.Param("id")
-		query := fmt.Sprintf("DELETE FROM %s WHERE %s = $1", config.TableName, config.IDColumn)
 
-		result, err := h.db.Exec(query, id)
+		// Build query with multi-tenant filtering if enabled
+		var query string
+		var err error
+
+		// For views, delete from the underlying base table
+		tableName := config.TableName
+		if config.UseView {
+			// Map view names to base table names for deletes
+			switch config.ViewName {
+			case "v_active_people":
+				tableName = "pdat_person"
+			case "v_person_addresses":
+				tableName = "pdat_address"
+			case "v_person_emails":
+				tableName = "pdat_pers_emails"
+			case "v_person_phones":
+				tableName = "pdat_pers_phone"
+			case "v_person_notes":
+				tableName = "pdat_pers_notes"
+			case "v_person_links":
+				tableName = "pdat_links"
+			}
+		}
+
+		var result sql.Result
+		if config.MultiTenant {
+			// Get user ID from JWT context
+			userID, ok := middleware.GetUserID(c)
+			if !ok {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+				return
+			}
+
+			// Multi-tenant delete - ensure user owns the record via JOIN
+			if config.UseView {
+				// For related tables, join to pdat_person to verify ownership
+				query = fmt.Sprintf(`DELETE FROM %s
+					WHERE %s = $1
+					AND pdat_person_id IN (SELECT pdat_person_id FROM pdat_person WHERE sec_users_id = $2)`,
+					tableName, config.IDColumn)
+			} else {
+				// For direct tables, check sec_users_id directly
+				query = fmt.Sprintf("DELETE FROM %s WHERE %s = $1 AND sec_users_id = $2", tableName, config.IDColumn)
+			}
+			result, err = h.db.Exec(query, id, userID)
+		} else {
+			query = fmt.Sprintf("DELETE FROM %s WHERE %s = $1", tableName, config.IDColumn)
+			result, err = h.db.Exec(query, id)
+		}
+
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

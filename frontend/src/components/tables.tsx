@@ -4,8 +4,8 @@ import type { TableColumn } from '../types'
 
 export function AddressesTable() {
   const columns: TableColumn[] = [
-    { field: 'pdat_address_id', label: 'ID', readOnly: true },
-    { field: 'pdat_person_id', label: 'Person ID', type: 'number' },
+    { field: 'pdat_address_id', label: 'ID', readOnly: true, showInTable: false },
+    { field: 'person_full_name', label: 'Person', readOnly: true },
     { field: 'addr1', label: 'Address 1' },
     { field: 'addr2', label: 'Address 2' },
     { field: 'city', label: 'City' },
@@ -19,30 +19,32 @@ export function AddressesTable() {
 
 export function EmailsTable() {
   const columns: TableColumn[] = [
-    { field: 'pdat_pers_emails_id', label: 'ID', readOnly: true },
-    { field: 'pdat_person_id', label: 'Person ID', type: 'number' },
+    { field: 'pdat_pers_emails_id', label: 'ID', readOnly: true, showInTable: false },
+    { field: 'person_full_name', label: 'Person', readOnly: true },
     { field: 'email_addr', label: 'Email', type: 'email' },
-    { field: 'pdat_email_types_id', label: 'Email Type ID', type: 'number' },
+    { field: 'pdat_email_types_id', label: 'Email Type', type: 'select', lookupEndpoint: 'email-types', lookupLabel: 'name', lookupValue: 'pdat_email_types_id', showInTable: false },
+    { field: 'email_type_name', label: 'Email Type', readOnly: true },
   ]
   return <TableManager title="Email Addresses" apiEndpoint="emails" columns={columns} idField="pdat_pers_emails_id" />
 }
 
 export function PhonesTable() {
   const columns: TableColumn[] = [
-    { field: 'pdat_pers_phone_id', label: 'ID', readOnly: true },
-    { field: 'pdat_person_id', label: 'Person ID', type: 'number' },
+    { field: 'pdat_pers_phone_id', label: 'ID', readOnly: true, showInTable: false },
+    { field: 'person_full_name', label: 'Person', readOnly: true },
     { field: 'phone_num', label: 'Phone Number', type: 'tel' },
     { field: 'phone_ext', label: 'Extension' },
     { field: 'country_code', label: 'Country Code' },
-    { field: 'pdat_phone_type_id', label: 'Phone Type ID', type: 'number' },
+    { field: 'pdat_phone_type_id', label: 'Phone Type', type: 'select', lookupEndpoint: 'phone-types', lookupLabel: 'name', lookupValue: 'pdat_phone_type_id', showInTable: false },
+    { field: 'phone_type_name', label: 'Phone Type', readOnly: true },
   ]
   return <TableManager title="Phone Numbers" apiEndpoint="phones" columns={columns} idField="pdat_pers_phone_id" />
 }
 
 export function NotesTable() {
   const columns: TableColumn[] = [
-    { field: 'pdat_pers_notes_id', label: 'ID', readOnly: true },
-    { field: 'pdat_person_id', label: 'Person ID', type: 'number' },
+    { field: 'pdat_pers_notes_id', label: 'ID', readOnly: true, showInTable: false },
+    { field: 'person_full_name', label: 'Person', readOnly: true },
     { field: 'note_text', label: 'Note', type: 'textarea' },
     { field: 'create_date', label: 'Date', type: 'date', readOnly: true },
   ]
@@ -51,18 +53,18 @@ export function NotesTable() {
 
 export function LinksTable() {
   const columns: TableColumn[] = [
-    { field: 'pdat_links_id', label: 'ID', readOnly: true },
+    { field: 'pdat_links_id', label: 'ID', readOnly: true, showInTable: false },
+    { field: 'person_full_name', label: 'Person', readOnly: true },
     { field: 'link_text', label: 'Link Text' },
     { field: 'link_url', label: 'URL', type: 'url' },
     { field: 'note', label: 'Note', type: 'textarea' },
-    { field: 'pdat_person_id', label: 'Person ID', type: 'number' },
   ]
   return <TableManager title="Links" apiEndpoint="links" columns={columns} idField="pdat_links_id" />
 }
 
 export function AccountsTable() {
   const columns: TableColumn[] = [
-    { field: 'sec_accounts_id', label: 'ID', readOnly: true },
+    { field: 'sec_accounts_id', label: 'ID', readOnly: true, showInTable: false },
     { field: 'name', label: 'Account Name' },
     { field: 'sec_users_id', label: 'User ID', type: 'number' },
     { field: 'create_date', label: 'Created', type: 'date', readOnly: true },
@@ -72,7 +74,7 @@ export function AccountsTable() {
 
 export function UsersTable() {
   const columns: TableColumn[] = [
-    { field: 'sec_users_id', label: 'ID', readOnly: true },
+    { field: 'sec_users_id', label: 'ID', readOnly: true, showInTable: false },
     { field: 'pdat_person_id', label: 'Person ID', type: 'number' },
     { field: 'email', label: 'Email', type: 'email' },
     { field: 'email_verified', label: 'Email Verified', type: 'checkbox', readOnly: true },
@@ -83,7 +85,7 @@ export function UsersTable() {
 
 export function RolesTable() {
   const columns: TableColumn[] = [
-    { field: 'sec_roles_id', label: 'ID', readOnly: true },
+    { field: 'sec_roles_id', label: 'ID', readOnly: true, showInTable: false },
     { field: 'name', label: 'Role Name' },
     { field: 'descr', label: 'Description', type: 'textarea' },
   ]

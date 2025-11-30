@@ -19923,3 +19923,23 @@ INSERT INTO sec_users (sec_users_id, fname, lname, create_date, create_user, mod
   ('11', 'Shaimaa', 'Elk', '2007-04-10 13:07:11.818699+00', 'DENGLISH_BUSINESS', '2007-04-10 13:07:11.818699+00', 'DENGLISH_BUSINESS'),
   ('5', 'Doug', 'Fitzgerald', '2005-09-06 14:54:57.510301+00', 'DENGLISH', '2007-07-23 01:28:33.714077+00', 'DENGLISH');
 
+
+-- Seed data for email types (global reference data)
+INSERT INTO pdat_email_types (name, sec_users_id, create_date, create_user, modify_date, modify_user, active_flag)
+VALUES
+  ('Work', 1, CURRENT_TIMESTAMP, 'system', CURRENT_TIMESTAMP, 'system', 'Y'),
+  ('Personal', 1, CURRENT_TIMESTAMP, 'system', CURRENT_TIMESTAMP, 'system', 'Y'),
+  ('Home', 1, CURRENT_TIMESTAMP, 'system', CURRENT_TIMESTAMP, 'system', 'Y'),
+  ('Other', 1, CURRENT_TIMESTAMP, 'system', CURRENT_TIMESTAMP, 'system', 'Y')
+ON CONFLICT DO NOTHING;
+
+-- Seed data for phone types (global reference data)
+INSERT INTO pdat_phone_type (name, sec_users_id, create_date, create_user, modify_date, modify_user, active_flag)
+VALUES
+  ('Mobile', 1, CURRENT_TIMESTAMP, 'system', CURRENT_TIMESTAMP, 'system', 'Y'),
+  ('Home', 1, CURRENT_TIMESTAMP, 'system', CURRENT_TIMESTAMP, 'system', 'Y'),
+  ('Work', 1, CURRENT_TIMESTAMP, 'system', CURRENT_TIMESTAMP, 'system', 'Y'),
+  ('Fax', 1, CURRENT_TIMESTAMP, 'system', CURRENT_TIMESTAMP, 'system', 'Y'),
+  ('Other', 1, CURRENT_TIMESTAMP, 'system', CURRENT_TIMESTAMP, 'system', 'Y')
+ON CONFLICT DO NOTHING;
+
