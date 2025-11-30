@@ -195,6 +195,13 @@ func main() {
 			protected.GET("/roles", tableHandler.ListRecords("roles"))
 			protected.GET("/roles/:id", tableHandler.GetRecord("roles"))
 			protected.DELETE("/roles/:id", tableHandler.DeleteRecord("roles"))
+
+			// Lookup tables for dropdowns
+			protected.GET("/email-types", tableHandler.ListRecords("email-types"))
+			protected.GET("/email-types/:id", tableHandler.GetRecord("email-types"))
+
+			protected.GET("/phone-types", tableHandler.ListRecords("phone-types"))
+			protected.GET("/phone-types/:id", tableHandler.GetRecord("phone-types"))
 		}
 	}
 

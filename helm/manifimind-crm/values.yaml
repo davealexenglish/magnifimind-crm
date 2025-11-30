@@ -11,7 +11,7 @@ database:
   enabled: true
   image:
     repository: manifimind-crm-database
-    tag: latest
+    tag: "0.1.6"
   resources:
     requests:
       memory: "256Mi"
@@ -33,7 +33,7 @@ backend:
   enabled: true
   image:
     repository: manifimind-crm-backend
-    tag: latest
+    tag: "0.1.2"
   replicas: 1
   resources:
     requests:
@@ -67,7 +67,7 @@ frontend:
   enabled: true
   image:
     repository: manifimind-crm-frontend
-    tag: latest
+    tag: "0.1.4"
   replicas: 1
   resources:
     requests:
