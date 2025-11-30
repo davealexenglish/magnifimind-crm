@@ -358,52 +358,56 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
           </div>
         ) : (
           <div style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', overflow: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'auto' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
                   {columns.filter(col => col.showInTable !== false).map(col => (
-                    <th key={col.field} style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#213547' }}>
+                    <th key={col.field} style={{ padding: '0.4rem 0.5rem', textAlign: 'left', fontWeight: '600', color: '#213547', fontSize: '0.9rem' }}>
                       {col.label}
                     </th>
                   ))}
-                  <th style={{ padding: '1rem', textAlign: 'right', fontWeight: '600', color: '#213547' }}>Actions</th>
+                  <th style={{ padding: '0.4rem 0.5rem', textAlign: 'center', fontWeight: '600', color: '#213547', fontSize: '0.9rem', width: '80px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredRecords.map((record, idx) => (
                   <tr key={record[idField] || idx} style={{ borderBottom: '1px solid #e0e0e0' }}>
                     {columns.filter(col => col.showInTable !== false).map(col => (
-                      <td key={col.field} style={{ padding: '1rem', color: '#213547' }}>
+                      <td key={col.field} style={{ padding: '0.35rem 0.5rem', color: '#213547', fontSize: '0.9rem' }}>
                         {formatValue(record[col.field], col.type)}
                       </td>
                     ))}
-                    <td style={{ padding: '1rem', textAlign: 'right' }}>
+                    <td style={{ padding: '0.35rem 0.5rem', textAlign: 'center' }}>
                       <button
                         onClick={() => handleEdit(record)}
                         style={{
-                          padding: '0.5rem 1rem',
-                          backgroundColor: '#646cff',
-                          color: 'white',
+                          background: 'none',
                           border: 'none',
-                          borderRadius: '4px',
+                          fontSize: '18px',
                           cursor: 'pointer',
-                          marginRight: '0.5rem'
+                          padding: '4px 6px',
+                          borderRadius: '6px',
+                          transition: 'background-color 0.2s'
                         }}
+                        title="Edit"
                       >
-                        Edit
+                        ✏️
                       </button>
                       <button
                         onClick={() => handleDelete(record[idField])}
                         style={{
-                          padding: '0.5rem 1rem',
-                          backgroundColor: '#d32f2f',
-                          color: 'white',
+                          background: 'none',
                           border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer'
+                          fontSize: '18px',
+                          cursor: 'pointer',
+                          padding: '4px 6px',
+                          borderRadius: '6px',
+                          transition: 'background-color 0.2s',
+                          color: '#ef4444'
                         }}
+                        title="Delete"
                       >
-                        Delete
+                        🗑️
                       </button>
                     </td>
                   </tr>

@@ -186,8 +186,10 @@ CREATE TABLE pdat_email_types (
 
 CREATE TABLE pdat_links (
     pdat_links_id integer DEFAULT nextval(('"pdat_links_pdat_links_id_seq"'::text)::regclass) NOT NULL,
-    name character varying(50),
-    link character varying(8190) NOT NULL,
+    link_text character varying(255),
+    link_url character varying(8190) NOT NULL,
+    note text,
+    pdat_person_id integer NOT NULL,
     sec_users_id integer NOT NULL,
     create_date timestamp with time zone NOT NULL,
     create_user character varying(30) NOT NULL,
@@ -354,6 +356,9 @@ ALTER TABLE ONLY pdat_calendar
 
 ALTER TABLE ONLY pdat_email_types
     ADD CONSTRAINT chk_pdat_email_types_sec_users_ FOREIGN KEY (sec_users_id) REFERENCES sec_users(sec_users_id) MATCH FULL;
+
+ALTER TABLE ONLY pdat_links
+    ADD CONSTRAINT chk_pdat_links_pdat_person_id FOREIGN KEY (pdat_person_id) REFERENCES pdat_person(pdat_person_id) MATCH FULL;
 
 ALTER TABLE ONLY pdat_links
     ADD CONSTRAINT chk_pdat_links_sec_users_id FOREIGN KEY (sec_users_id) REFERENCES sec_users(sec_users_id) MATCH FULL;
