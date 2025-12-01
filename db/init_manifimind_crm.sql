@@ -274,6 +274,12 @@ CREATE TABLE pdat_phone_type (
     active_flag character(1) NOT NULL
 );
 
+CREATE TABLE cmn_states (
+    cmn_states_id integer NOT NULL,
+    name character varying(50) NOT NULL,
+    abbrev character(2) NOT NULL
+);
+
 CREATE TABLE sec_accounts (
     sec_accounts_id integer DEFAULT nextval(('"sec_accounts_sec_accounts_i_seq"'::text)::regclass) NOT NULL,
     name character varying(50) NOT NULL,
@@ -342,14 +348,36 @@ ALTER TABLE ONLY pdat_cal_pers
 ALTER TABLE ONLY pdat_calendar
     ADD CONSTRAINT uk_pdat_calendar_id UNIQUE (pdat_calendar_id);
 
+-- Primary/Unique key constraints for all tables
+ALTER TABLE ONLY pdat_person
+    ADD CONSTRAINT pk_pdat_person PRIMARY KEY (pdat_person_id);
+
+ALTER TABLE ONLY pdat_email_types
+    ADD CONSTRAINT pk_pdat_email_types PRIMARY KEY (pdat_email_types_id);
+
+ALTER TABLE ONLY pdat_phone_type
+    ADD CONSTRAINT pk_pdat_phone_type PRIMARY KEY (pdat_phone_type_id);
+
+ALTER TABLE ONLY sec_users
+    ADD CONSTRAINT pk_sec_users PRIMARY KEY (sec_users_id);
+
+ALTER TABLE ONLY sec_accounts
+    ADD CONSTRAINT pk_sec_accounts PRIMARY KEY (sec_accounts_id);
+
+ALTER TABLE ONLY sec_privileges
+    ADD CONSTRAINT pk_sec_privileges PRIMARY KEY (sec_privileges_id);
+
+ALTER TABLE ONLY cmn_states
+    ADD CONSTRAINT pk_cmn_states PRIMARY KEY (cmn_states_id);
+
 ALTER TABLE ONLY pdat_address
-    ADD CONSTRAINT chk_pdat_address_pdat_person_id FOREIGN KEY (pdat_person_id) REFERENCES pdat_person(pdat_person_id) MATCH FULL;
+    ADD CONSTRAINT chk_pdat_address_pdat_person_id FOREIGN KEY (pdat_person_id) REFERENCES pdat_person(pdat_person_id) MATCH FULL ON DELETE CASCADE;
 
 ALTER TABLE ONLY pdat_cal_pers
     ADD CONSTRAINT chk_pdat_cal_pers_pdat_calendar_id FOREIGN KEY (pdat_calendar_id) REFERENCES pdat_calendar(pdat_calendar_id) MATCH FULL;
 
 ALTER TABLE ONLY pdat_cal_pers
-    ADD CONSTRAINT chk_pdat_cal_pers_pdat_person_id FOREIGN KEY (pdat_person_id) REFERENCES pdat_person(pdat_person_id) MATCH FULL;
+    ADD CONSTRAINT chk_pdat_cal_pers_pdat_person_id FOREIGN KEY (pdat_person_id) REFERENCES pdat_person(pdat_person_id) MATCH FULL ON DELETE CASCADE;
 
 ALTER TABLE ONLY pdat_calendar
     ADD CONSTRAINT chk_pdat_calendar_sec_users_id FOREIGN KEY (sec_users_id) REFERENCES sec_users(sec_users_id) MATCH FULL;
@@ -358,7 +386,7 @@ ALTER TABLE ONLY pdat_email_types
     ADD CONSTRAINT chk_pdat_email_types_sec_users_ FOREIGN KEY (sec_users_id) REFERENCES sec_users(sec_users_id) MATCH FULL;
 
 ALTER TABLE ONLY pdat_links
-    ADD CONSTRAINT chk_pdat_links_pdat_person_id FOREIGN KEY (pdat_person_id) REFERENCES pdat_person(pdat_person_id) MATCH FULL;
+    ADD CONSTRAINT chk_pdat_links_pdat_person_id FOREIGN KEY (pdat_person_id) REFERENCES pdat_person(pdat_person_id) MATCH FULL ON DELETE CASCADE;
 
 ALTER TABLE ONLY pdat_links
     ADD CONSTRAINT chk_pdat_links_sec_users_id FOREIGN KEY (sec_users_id) REFERENCES sec_users(sec_users_id) MATCH FULL;
@@ -368,6 +396,18 @@ ALTER TABLE ONLY pdat_passwd
 
 ALTER TABLE ONLY pdat_pers_emails
     ADD CONSTRAINT chk_pdat_pers_emails_pdat_email FOREIGN KEY (pdat_email_types_id) REFERENCES pdat_email_types(pdat_email_types_id) MATCH FULL;
+
+ALTER TABLE ONLY pdat_pers_emails
+    ADD CONSTRAINT chk_pdat_pers_emails_pdat_person_id FOREIGN KEY (pdat_person_id) REFERENCES pdat_person(pdat_person_id) MATCH FULL ON DELETE CASCADE;
+
+ALTER TABLE ONLY pdat_pers_phone
+    ADD CONSTRAINT chk_pdat_pers_phone_pdat_person_id FOREIGN KEY (pdat_person_id) REFERENCES pdat_person(pdat_person_id) MATCH FULL ON DELETE CASCADE;
+
+ALTER TABLE ONLY pdat_pers_phone
+    ADD CONSTRAINT chk_pdat_pers_phone_pdat_phone_type_id FOREIGN KEY (pdat_phone_type_id) REFERENCES pdat_phone_type(pdat_phone_type_id) MATCH FULL;
+
+ALTER TABLE ONLY pdat_pers_notes
+    ADD CONSTRAINT chk_pdat_pers_notes_pdat_person_id FOREIGN KEY (pdat_person_id) REFERENCES pdat_person(pdat_person_id) MATCH FULL ON DELETE CASCADE;
 
 ALTER TABLE ONLY pdat_person
     ADD CONSTRAINT chk_pdat_person_sec_users_id FOREIGN KEY (sec_users_id) REFERENCES sec_users(sec_users_id) MATCH FULL;
@@ -380,6 +420,63 @@ ALTER TABLE ONLY sec_acct_roles
 
 ALTER TABLE ONLY sec_role_privs
     ADD CONSTRAINT chk_sec_role_privs_sec_privileg FOREIGN KEY (sec_privileges_id) REFERENCES sec_privileges(sec_privileges_id) MATCH FULL;
+
+-- =============================================
+-- REFERENCE DATA
+-- =============================================
+
+-- Insert US States (in alphabetical order)
+INSERT INTO cmn_states (cmn_states_id, name, abbrev) VALUES
+(1, 'Alabama', 'AL'),
+(2, 'Alaska', 'AK'),
+(3, 'Arizona', 'AZ'),
+(4, 'California', 'CA'),
+(5, 'Colorado', 'CO'),
+(6, 'Connecticut', 'CT'),
+(7, 'Delaware', 'DE'),
+(8, 'Florida', 'FL'),
+(9, 'Georgia', 'GA'),
+(10, 'Hawaii', 'HI'),
+(11, 'Idaho', 'ID'),
+(12, 'Illinois', 'IL'),
+(13, 'Indiana', 'IN'),
+(14, 'Indiana', 'IN'),
+(15, 'Iowa', 'IA'),
+(16, 'Kansas', 'KS'),
+(17, 'Kentucky', 'KY'),
+(18, 'Louisiana', 'LA'),
+(19, 'Maine', 'ME'),
+(20, 'Maryland', 'MD'),
+(21, 'Michigan', 'MI'),
+(22, 'Minnesota', 'MN'),
+(23, 'Mississippi', 'MS'),
+(24, 'Missouri', 'MO'),
+(25, 'Montana', 'MT'),
+(26, 'Nebraska', 'NE'),
+(27, 'Nevada', 'NV'),
+(28, 'New Hampshire', 'NH'),
+(29, 'New Hampshire', 'NH'),
+(30, 'New Jersey', 'NJ'),
+(31, 'New Mexico', 'NM'),
+(32, 'New York', 'NY'),
+(33, 'North Carolina', 'NC'),
+(34, 'North Dakota', 'ND'),
+(35, 'Ohio', 'OH'),
+(36, 'Oklahoma', 'OK'),
+(37, 'Pennsylvania', 'PA'),
+(38, 'Rhode Island', 'RI'),
+(39, 'South Carolina', 'SC'),
+(40, 'South Dakota', 'SD'),
+(41, 'Tennessee', 'TN'),
+(42, 'Texas', 'TX'),
+(43, 'Utah', 'UT'),
+(44, 'Vermont', 'VT'),
+(45, 'Virginia', 'VA'),
+(46, 'Washington', 'WA'),
+(47, 'Wisconsin', 'WI'),
+(48, 'West Virginia', 'WV'),
+(49, 'Wyoming', 'WY'),
+(50, 'District of Columbia', 'DC');
 
 -- Multi-tenant Views for Manifimind CRM
 -- These views join person data to related tables and include sec_users_id for tenant filtering
@@ -414,6 +511,8 @@ SELECT
     pa.addr2,
     pa.city,
     pa.cmn_states_id,
+    s.abbrev AS state,
+    s.name AS state_name,
     pa.zip,
     pa.zip_plus_4,
     pa.country,
@@ -429,6 +528,7 @@ SELECT
     pa.active_flag
 FROM pdat_address pa
 JOIN pdat_person p ON pa.pdat_person_id = p.pdat_person_id
+LEFT JOIN cmn_states s ON pa.cmn_states_id = s.cmn_states_id
 WHERE pa.active_flag = 'Y' AND p.active_flag = 'Y';
 
 -- View: Person Phones with Person Name and Phone Type
