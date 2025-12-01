@@ -3,12 +3,12 @@ import type { TableColumn } from '../types'
 
 function PeopleTable() {
   const columns: TableColumn[] = [
-    { field: 'pdat_person_id', label: 'ID', readOnly: true },
+    { field: 'pdat_person_id', label: 'ID', readOnly: true, showInTable: false },
     { field: 'fname', label: 'First Name' },
     { field: 'lname', label: 'Last Name' },
     { field: 'birthday', label: 'Birthday', type: 'date' },
-    { field: 'business_flag', label: 'Business' },
-    { field: 'sec_users_id', label: 'User ID', type: 'number' },
+    { field: 'business_flag', label: 'Business', type: 'checkbox' },
+    { field: 'sec_users_id', label: 'User ID', type: 'number', readOnly: true, showInTable: false },
     { field: 'create_date', label: 'Created', type: 'date', readOnly: true },
     { field: 'modify_date', label: 'Modified', type: 'date', readOnly: true },
   ]

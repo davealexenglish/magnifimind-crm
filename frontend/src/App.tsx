@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, type ReactNode } from 'react'
 import Login from './components/Login'
+import Layout from './components/Layout'
 import Dashboard from './components/Dashboard'
 import PasswordVault from './components/PasswordVault'
 import PeopleTable from './components/PeopleTable'
@@ -23,7 +24,7 @@ function App() {
 
   // Protected route wrapper
   const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-    return isAuthenticated ? children : <Navigate to="/login" />
+    return isAuthenticated ? <Layout>{children}</Layout> : <Navigate to="/login" />
   }
 
   return (
