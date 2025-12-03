@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import axios, { type AxiosError } from 'axios'
 import type { TableManagerProps, GenericRecord } from '../types'
 import ConfirmationModal from './ConfirmationModal'
+import PersonPicker from './PersonPicker'
 
 function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProps) {
   const [records, setRecords] = useState<GenericRecord[]>([])
@@ -25,12 +26,29 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
     isBulk: false
   })
   const navigate = useNavigate()
+  const [personPickerField, setPersonPickerField] = useState<string | null>(null)
 
   // Fetch records
   useEffect(() => {
     fetchRecords()
     fetchLookupData()
   }, [apiEndpoint])
+
+  // Handle edit mode - populate form when editingRecord changes
+  useEffect(() => {
+    if (editingRecord && records.length > 0) {
+      const recordToEdit = records.find(r => r[idField] === editingRecord)
+      if (recordToEdit) {
+        const convertedData: GenericRecord = { ...recordToEdit }
+        columns.forEach(col => {
+          if (col.type === 'checkbox' && typeof recordToEdit[col.field] === 'string') {
+            convertedData[col.field] = recordToEdit[col.field] === 'Y'
+          }
+        })
+        setFormData(convertedData)
+      }
+    }
+  }, [editingRecord, records, idField, columns])
 
   // Fetch lookup data for dropdowns
   const fetchLookupData = async () => {
@@ -83,6 +101,11 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
     setCurrentPage(1) // Reset to first page when filters change
   }, [searchTerm, records, columns, sortBy, sortDirection])
 
+  // Reset to first page when items per page changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [itemsPerPage])
+
   // Calculate paginated records
   const paginatedRecords = useMemo(() => {
     if (itemsPerPage === 'all') {
@@ -122,14 +145,6 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
 
   const handleEdit = (record: GenericRecord) => {
     setEditingRecord(record[idField])
-    // Convert 'Y'/'N' to boolean for checkbox fields
-    const convertedData: GenericRecord = { ...record }
-    columns.forEach(col => {
-      if (col.type === 'checkbox' && typeof record[col.field] === 'string') {
-        convertedData[col.field] = record[col.field] === 'Y'
-      }
-    })
-    setFormData(convertedData)
     setShowAddForm(false)
   }
 
@@ -412,7 +427,6 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
               onChange={(e: ChangeEvent<HTMLSelectElement>) => {
                 const value = e.target.value
                 setItemsPerPage(value === 'all' ? 'all' : Number(value))
-                setCurrentPage(1)
               }}
               style={{
                 padding: '0.75rem',
@@ -478,68 +492,96 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
             <h3 style={{ marginTop: 0, color: '#213547' }}>
               {editingRecord ? 'Edit Record' : 'Add New Record'}
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-              {columns.filter(col => !col.readOnly).map(col => (
-                <div key={col.field}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#213547' }}>
-                    {col.label}
-                  </label>
-                  {col.type === 'textarea' ? (
-                    <textarea
-                      value={formData[col.field] || ''}
-                      onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleInputChange(col.field, e.target.value)}
-                      rows={3}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px'
-                      }}
-                    />
-                  ) : col.type === 'checkbox' ? (
-                    <input
-                      type="checkbox"
-                      checked={typeof formData[col.field] === 'boolean' ? formData[col.field] : formData[col.field] === 'Y'}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(col.field, e.target.checked)}
-                      style={{ width: '20px', height: '20px' }}
-                    />
-                  ) : col.type === 'select' ? (
-                    <select
-                      value={formData[col.field] || ''}
-                      onChange={(e: ChangeEvent<HTMLSelectElement>) => handleInputChange(col.field, e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px'
-                      }}
-                    >
-                      <option value="">Select {col.label}</option>
-                      {lookupData[col.field]?.map(option => (
-                        <option
-                          key={option[col.lookupValue || 'id']}
-                          value={option[col.lookupValue || 'id']}
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                {columns.filter(col => !col.readOnly).map(col => (
+                  <tr key={col.field}>
+                    <td style={{
+                      padding: '0.35rem',
+                      fontWeight: '500',
+                      color: '#213547',
+                      verticalAlign: 'top',
+                      width: '200px',
+                      textAlign: 'right',
+                      paddingRight: '0.75rem'
+                    }}>
+                      {col.label}:
+                    </td>
+                    <td style={{ padding: '0.35rem' }}>
+                      {col.type === 'textarea' ? (
+                        <textarea
+                          value={formData[col.field] || ''}
+                          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleInputChange(col.field, e.target.value)}
+                          rows={3}
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px'
+                          }}
+                        />
+                      ) : col.type === 'checkbox' ? (
+                        <input
+                          type="checkbox"
+                          checked={typeof formData[col.field] === 'boolean' ? formData[col.field] : formData[col.field] === 'Y'}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(col.field, e.target.checked)}
+                          style={{ width: '20px', height: '20px' }}
+                        />
+                      ) : col.type === 'select' ? (
+                        <select
+                          value={formData[col.field] || ''}
+                          onChange={(e: ChangeEvent<HTMLSelectElement>) => handleInputChange(col.field, e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px'
+                          }}
                         >
-                          {option[col.lookupLabel || 'name']}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type={col.type || 'text'}
-                      value={formData[col.field] || ''}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(col.field, e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px'
-                      }}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
+                          <option value="">Select {col.label}</option>
+                          {lookupData[col.field]?.map(option => (
+                            <option
+                              key={option[col.lookupValue || 'id']}
+                              value={option[col.lookupValue || 'id']}
+                            >
+                              {option[col.lookupLabel || 'name']}
+                            </option>
+                          ))}
+                        </select>
+                      ) : col.type === 'person-picker' ? (
+                        <button
+                          type="button"
+                          onClick={() => setPersonPickerField(col.field)}
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            backgroundColor: formData[col.field] ? '#28a745' : '#646cff',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {formData[col.field] ? `✓ ${formData[`${col.field}_display_name`] || formData[col.field]}` : '👤 Select Person'}
+                        </button>
+                      ) : (
+                        <input
+                          type={col.type || 'text'}
+                          value={formData[col.field] || ''}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(col.field, e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px'
+                          }}
+                        />
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
             <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
               <button
                 onClick={handleSave}
@@ -720,6 +762,20 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
         onCancel={() => setDeleteModal({ isOpen: false, recordToDelete: null, isBulk: false })}
         isDangerous={true}
       />
+
+      {/* Person Picker Modal */}
+      {personPickerField && (
+        <PersonPicker
+          onSelect={(person: any) => {
+            handleInputChange(personPickerField, person.pdat_person_id)
+            // Store person name in a separate field for display
+            handleInputChange(`${personPickerField}_display_name`, `${person.fname} ${person.lname}`)
+            setPersonPickerField(null)
+          }}
+          onCancel={() => setPersonPickerField(null)}
+          selectedPersonId={formData[personPickerField]}
+        />
+      )}
     </div>
   )
 }

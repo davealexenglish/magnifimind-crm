@@ -1,14 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "manifimind-crm.name" -}}
+{{- define "magnifimind-crm.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 */}}
-{{- define "manifimind-crm.fullname" -}}
+{{- define "magnifimind-crm.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,16 +24,16 @@ Create a default fully qualified app name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "manifimind-crm.chart" -}}
+{{- define "magnifimind-crm.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "manifimind-crm.labels" -}}
-helm.sh/chart: {{ include "manifimind-crm.chart" . }}
-{{ include "manifimind-crm.selectorLabels" . }}
+{{- define "magnifimind-crm.labels" -}}
+helm.sh/chart: {{ include "magnifimind-crm.chart" . }}
+{{ include "magnifimind-crm.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -43,7 +43,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "manifimind-crm.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "manifimind-crm.name" . }}
+{{- define "magnifimind-crm.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "magnifimind-crm.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}

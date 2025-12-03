@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Extract sec_* and pdat_* schemas and data from PostgreSQL dump file.
-Generates init_manifimind_crm.sql and load_manifimind_crm.sql files.
+Generates init_magnifimind_crm.sql and load_magnifimind_crm.sql files.
 """
 
 import re
@@ -231,8 +231,8 @@ def write_load_sql(data_statements, output_file):
 
 def main():
     dump_file = '/Users/denglish/gitDevelopment/BB/genesis/docker/mde/db/sql/dump_mde_20200411_2343.dbb'
-    init_file = '/Users/denglish/gitDevelopment/github/davealexenglish/magnifimind-crm/db/init_manifimind_crm.sql'
-    load_file = '/Users/denglish/gitDevelopment/github/davealexenglish/magnifimind-crm/db/load_manifimind_crm.sql'
+    init_file = '/Users/denglish/gitDevelopment/github/davealexenglish/magnifimind-crm/db/init_magnifimind_crm.sql'
+    load_file = '/Users/denglish/gitDevelopment/github/davealexenglish/magnifimind-crm/db/load_magnifimind_crm.sql'
 
     # Extract
     schemas, sequences, sequence_ownerships, constraints, data_statements = extract_schemas_and_data(dump_file)

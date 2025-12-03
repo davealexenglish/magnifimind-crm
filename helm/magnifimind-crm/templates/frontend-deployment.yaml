@@ -2,20 +2,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "manifimind-crm.fullname" . }}-frontend
+  name: {{ include "magnifimind-crm.fullname" . }}-frontend
   labels:
-    app: {{ include "manifimind-crm.name" . }}
+    app: {{ include "magnifimind-crm.name" . }}
     component: frontend
 spec:
   replicas: {{ .Values.frontend.replicas }}
   selector:
     matchLabels:
-      app: {{ include "manifimind-crm.name" . }}
+      app: {{ include "magnifimind-crm.name" . }}
       component: frontend
   template:
     metadata:
       labels:
-        app: {{ include "manifimind-crm.name" . }}
+        app: {{ include "magnifimind-crm.name" . }}
         component: frontend
     spec:
       initContainers:
@@ -28,7 +28,7 @@ spec:
         - |
           echo "Waiting for backend to be ready..."
           for i in $(seq 1 {{ .Values.initContainers.backend.maxAttempts }}); do
-            nc -z {{ include "manifimind-crm.fullname" . }}-backend {{ .Values.backend.service.port }} && echo "Backend is ready!" && exit 0
+            nc -z {{ include "magnifimind-crm.fullname" . }}-backend {{ .Values.backend.service.port }} && echo "Backend is ready!" && exit 0
             echo "Waiting for backend... attempt $i/{{ .Values.initContainers.backend.maxAttempts }}"
             sleep {{ .Values.initContainers.backend.checkInterval }}
           done

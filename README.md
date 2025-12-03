@@ -33,7 +33,7 @@ Manifimind CRM is a full-stack web application designed to manage personal data 
 - **Containerization**: Docker & Docker Compose
 - **Orchestration**: Kubernetes with Helm charts
 - **Registry**: Private Docker registry at t5810.webcentricds.net
-- **Database Migrations**: SQL scripts (init_manifimind_crm.sql, load_manifimind_crm.sql)
+- **Database Migrations**: SQL scripts (init_magnifimind_crm.sql, load_magnifimind_crm.sql)
 
 ## Database Schema
 
@@ -63,7 +63,7 @@ The application manages two main categories of tables:
 ## Project Structure
 
 ```
-manifimind-crm/
+magnifimind-crm/
 ├── backend/                 # Go backend application
 │   ├── cmd/
 │   │   └── server/         # Main application entry point
@@ -87,12 +87,12 @@ manifimind-crm/
 │   ├── Dockerfile          # Frontend container image
 │   └── package.json
 ├── db/                     # Database files
-│   ├── init_manifimind_crm.sql   # Schema definitions
-│   ├── load_manifimind_crm.sql   # Seed data
+│   ├── init_magnifimind_crm.sql   # Schema definitions
+│   ├── load_magnifimind_crm.sql   # Seed data
 │   ├── Dockerfile          # Database container image
 │   └── extract_schemas.py  # Schema extraction script
 ├── helm/                   # Kubernetes Helm charts
-│   └── manifimind-crm/     # Main application chart
+│   └── magnifimind-crm/     # Main application chart
 │       ├── Chart.yaml
 │       ├── values.yaml
 │       └── templates/
@@ -115,19 +115,19 @@ manifimind-crm/
 1. **Clone the repository**
    ```bash
    git clone https://github.com/davealexenglish/magnifimind-crm.git
-   cd manifimind-crm
+   cd magnifimind-crm
    ```
 
 2. **Set up the database**
    ```bash
    # Create database
-   createdb manifimind_crm
+   createdb magnifimind_crm
 
    # Run schema migrations
-   psql -d manifimind_crm -f db/init_manifimind_crm.sql
+   psql -d magnifimind_crm -f db/init_magnifimind_crm.sql
 
    # Load seed data
-   psql -d manifimind_crm -f db/load_manifimind_crm.sql
+   psql -d magnifimind_crm -f db/load_magnifimind_crm.sql
    ```
 
 3. **Configure backend**
@@ -177,7 +177,7 @@ This will start all services (database, backend, frontend) in containers.
 2. **Deploy with Helm**
    ```bash
    export KUBECONFIG=$HOME/.kube/config-t5810
-   helm install manifimind-crm ./helm/manifimind-crm
+   helm install magnifimind-crm ./helm/magnifimind-crm
    ```
 
 ## API Documentation
@@ -239,14 +239,14 @@ export MASTER_PASSWORD="your-generated-password"
 # Server
 PORT=8080
 GIN_MODE=debug
-SES_FROM_EMAIL=noreply@manifimind.com
+SES_FROM_EMAIL=noreply@magnifimind.com
 
 # Database
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=postgres
-DB_NAME=manifimind_crm
+DB_NAME=magnifimind_crm
 DB_SSL_MODE=disable
 
 # JWT
@@ -322,6 +322,6 @@ This project is proprietary and confidential.
 
 ## Contact
 
-Dave English - dave@manifimind.com
+Dave English - dave@magnifimind.com
 
 Project Link: https://github.com/davealexenglish/magnifimind-crm

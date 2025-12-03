@@ -2,9 +2,9 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "manifimind-crm.fullname" . }}-db-init
+  name: {{ include "magnifimind-crm.fullname" . }}-db-init
   labels:
-    app: {{ include "manifimind-crm.name" . }}
+    app: {{ include "magnifimind-crm.name" . }}
     component: db-init
   annotations:
     "helm.sh/hook": post-install,post-upgrade
@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ include "manifimind-crm.name" . }}
+        app: {{ include "magnifimind-crm.name" . }}
         component: db-init
     spec:
       restartPolicy: OnFailure
@@ -25,7 +25,7 @@ spec:
         - sh
         - -c
         - |
-          until pg_isready -h {{ include "manifimind-crm.fullname" . }}-database -p 5432 -U {{ .Values.database.env.POSTGRES_USER }}; do
+          until pg_isready -h {{ include "magnifimind-crm.fullname" . }}-database -p 5432 -U {{ .Values.database.env.POSTGRES_USER }}; do
             echo "Waiting for database..."
             sleep 2
           done
@@ -36,7 +36,7 @@ spec:
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
         env:
         - name: PGHOST
-          value: {{ include "manifimind-crm.fullname" . }}-database
+          value: {{ include "magnifimind-crm.fullname" . }}-database
         - name: PGPORT
           value: "5432"
         - name: PGUSER
@@ -44,7 +44,7 @@ spec:
         - name: PGPASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ include "manifimind-crm.fullname" . }}-secrets
+              name: {{ include "magnifimind-crm.fullname" . }}-secrets
               key: db-password
         - name: PGDATABASE
           value: {{ .Values.database.env.POSTGRES_DB | quote }}

@@ -60,14 +60,14 @@ func Load() *Config {
 		Server: ServerConfig{
 			Port:         getEnv("PORT", "8080"),
 			GinMode:      getEnv("GIN_MODE", "debug"),
-			SESFromEmail: getEnv("SES_FROM_EMAIL", "noreply@manifimind.com"),
+			SESFromEmail: getEnv("SES_FROM_EMAIL", "noreply@magnifimind.com"),
 		},
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnv("DB_PORT", "5432"),
 			User:     getEnv("DB_USER", "postgres"),
 			Password: getEnv("DB_PASSWORD", "postgres"),
-			Database: getEnv("DB_NAME", "manifimind_crm"),
+			Database: getEnv("DB_NAME", "magnifimind_crm"),
 			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
 		},
 		JWT: JWTConfig{

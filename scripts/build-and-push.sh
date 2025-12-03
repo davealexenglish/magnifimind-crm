@@ -30,7 +30,7 @@ fi
 echo ""
 echo ">>> Building Database image..."
 docker buildx build --platform linux/amd64 \
-    -t "${REGISTRY}/manifimind-crm-database:${VERSION}" \
+    -t "${REGISTRY}/magnifimind-crm-database:${VERSION}" \
     --push \
     ./db/
 
@@ -40,7 +40,7 @@ echo "✅ Database image built and pushed"
 echo ""
 echo ">>> Building Backend image..."
 docker buildx build --platform linux/amd64 \
-    -t "${REGISTRY}/manifimind-crm-backend:${VERSION}" \
+    -t "${REGISTRY}/magnifimind-crm-backend:${VERSION}" \
     --push \
     ./backend/
 
@@ -51,7 +51,7 @@ if [ -f "./frontend/package.json" ]; then
     echo ""
     echo ">>> Building Frontend image..."
     docker buildx build --platform linux/amd64 \
-        -t "${REGISTRY}/manifimind-crm-frontend:${VERSION}" \
+        -t "${REGISTRY}/magnifimind-crm-frontend:${VERSION}" \
         --push \
         ./frontend/
     echo "✅ Frontend image built and pushed"
@@ -67,7 +67,7 @@ echo "✅ All images built and pushed successfully!"
 echo "========================================="
 echo ""
 echo "Images available at:"
-echo "  - ${REGISTRY}/manifimind-crm-database:${VERSION}"
-echo "  - ${REGISTRY}/manifimind-crm-backend:${VERSION}"
-echo "  - ${REGISTRY}/manifimind-crm-frontend:${VERSION}"
+echo "  - ${REGISTRY}/magnifimind-crm-database:${VERSION}"
+echo "  - ${REGISTRY}/magnifimind-crm-backend:${VERSION}"
+echo "  - ${REGISTRY}/magnifimind-crm-frontend:${VERSION}"
 echo ""
