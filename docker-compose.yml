@@ -5,10 +5,10 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile
-    image: manifimind-crm-database:latest
-    container_name: manifimind-db
+    image: magnifimind-crm-database:latest
+    container_name: magnifimind-db
     environment:
-      POSTGRES_DB: manifimind_crm
+      POSTGRES_DB: magnifimind_crm
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
@@ -16,7 +16,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - manifimind-network
+      - magnifimind-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -28,8 +28,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: manifimind-crm-backend:latest
-    container_name: manifimind-backend
+    image: magnifimind-crm-backend:latest
+    container_name: magnifimind-backend
     environment:
       PORT: 8080
       GIN_MODE: release
@@ -37,7 +37,7 @@ services:
       DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_NAME: manifimind_crm
+      DB_NAME: magnifimind_crm
       DB_SSL_MODE: disable
       JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
       JWT_EXPIRATION_HOURS: 24
@@ -45,14 +45,14 @@ services:
       AWS_REGION: ${AWS_REGION:-us-east-1}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
-      SES_FROM_EMAIL: ${SES_FROM_EMAIL:-noreply@manifimind.com}
+      SES_FROM_EMAIL: ${SES_FROM_EMAIL:-noreply@magnifimind.com}
     ports:
       - "8080:8080"
     depends_on:
       database:
         condition: service_healthy
     networks:
-      - manifimind-network
+      - magnifimind-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
       interval: 30s
@@ -64,14 +64,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    image: manifimind-crm-frontend:latest
-    container_name: manifimind-frontend
+    image: magnifimind-crm-frontend:latest
+    container_name: magnifimind-frontend
     ports:
       - "3000:80"
     depends_on:
       - backend
     networks:
-      - manifimind-network
+      - magnifimind-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
@@ -80,7 +80,7 @@ services:
       start_period: 5s
 
 networks:
-  manifimind-network:
+  magnifimind-network:
     driver: bridge
 
 volumes:

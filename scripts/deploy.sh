@@ -4,8 +4,8 @@ set -e
 # Deploy Manifimind CRM to t5810 Minikube Cluster
 # This script deploys the application using Helm
 
-RELEASE_NAME="${RELEASE_NAME:-manifimind-crm}"
-NAMESPACE="${NAMESPACE:-manifimind-crm}"
+RELEASE_NAME="${RELEASE_NAME:-magnifimind-crm}"
+NAMESPACE="${NAMESPACE:-magnifimind-crm}"
 KUBECONFIG="${KUBECONFIG:-$HOME/.kube/config-t5810}"
 
 echo "========================================="
@@ -40,14 +40,14 @@ echo ""
 echo ">>> Checking for existing release..."
 if helm list -n "$NAMESPACE" | grep -q "$RELEASE_NAME"; then
     echo ">>> Release exists, upgrading..."
-    helm upgrade "$RELEASE_NAME" ./helm/manifimind-crm \
+    helm upgrade "$RELEASE_NAME" ./helm/magnifimind-crm \
         --namespace "$NAMESPACE" \
         --wait \
         --timeout 5m
     echo "✅ Release upgraded successfully"
 else
     echo ">>> Installing new release..."
-    helm install "$RELEASE_NAME" ./helm/manifimind-crm \
+    helm install "$RELEASE_NAME" ./helm/magnifimind-crm \
         --namespace "$NAMESPACE" \
         --wait \
         --timeout 5m
@@ -57,12 +57,12 @@ fi
 # Show deployment status
 echo ""
 echo ">>> Deployment Status:"
-kubectl get pods -n "$NAMESPACE" -l "app.kubernetes.io/name=manifimind-crm"
+kubectl get pods -n "$NAMESPACE" -l "app.kubernetes.io/name=magnifimind-crm"
 
 # Show services
 echo ""
 echo ">>> Services:"
-kubectl get svc -n "$NAMESPACE" -l "app.kubernetes.io/name=manifimind-crm"
+kubectl get svc -n "$NAMESPACE" -l "app.kubernetes.io/name=magnifimind-crm"
 
 # Get frontend URL
 echo ""

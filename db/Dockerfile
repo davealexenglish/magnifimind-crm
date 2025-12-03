@@ -2,8 +2,8 @@
 FROM postgres:15-alpine
 
 # Copy initialization scripts
-COPY init_manifimind_crm.sql /docker-entrypoint-initdb.d/01-init.sql
-COPY load_manifimind_crm.sql /docker-entrypoint-initdb.d/02-load.sql
+COPY init_magnifimind_crm.sql /docker-entrypoint-initdb.d/01-init.sql
+COPY load_magnifimind_crm.sql /docker-entrypoint-initdb.d/02-load.sql
 COPY truncate_pdat_passwd.sql /docker-entrypoint-initdb.d/03-truncate.sql
 
 # Set permissions

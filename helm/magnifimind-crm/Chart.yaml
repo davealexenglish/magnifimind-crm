@@ -1,6 +1,6 @@
 apiVersion: v2
-name: manifimind-crm
-description: Manifimind CRM - Complete CRM system with password vault
+name: magnifimind-crm
+description: Magnifimind CRM - Complete CRM system with password vault
 type: application
 version: 1.0.0
 appVersion: "1.0.0"
@@ -13,4 +13,4 @@ keywords:
   - postgresql
 maintainers:
   - name: Dave English
-    email: dave@manifimind.com
+    email: dave@magnifimind.com

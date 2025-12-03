@@ -1,4 +1,4 @@
-# Default values for manifimind-crm
+# Default values for magnifimind-crm
 # This is a YAML-formatted file.
 
 # Global settings
@@ -10,7 +10,7 @@ global:
 database:
   enabled: true
   image:
-    repository: manifimind-crm-database
+    repository: magnifimind-crm-database
     tag: "0.1.11"
   resources:
     requests:
@@ -24,7 +24,7 @@ database:
     size: 1Gi
     storageClass: ""  # Use default storage class
   env:
-    POSTGRES_DB: manifimind_crm
+    POSTGRES_DB: magnifimind_crm
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: postgres  # Change in production!
 
@@ -32,8 +32,8 @@ database:
 backend:
   enabled: true
   image:
-    repository: manifimind-crm-backend
-    tag: "0.1.2"
+    repository: magnifimind-crm-backend
+    tag: "0.1.6"
   replicas: 1
   resources:
     requests:
@@ -48,11 +48,11 @@ backend:
   env:
     PORT: "8080"
     GIN_MODE: release
-    DB_HOST: manifimind-crm-database
+    DB_HOST: magnifimind-crm-database
     DB_PORT: "5432"
     DB_USER: postgres
     DB_PASSWORD: postgres  # Change in production!
-    DB_NAME: manifimind_crm
+    DB_NAME: magnifimind_crm
     DB_SSL_MODE: disable
     JWT_SECRET: change-this-jwt-secret-in-production
     JWT_EXPIRATION_HOURS: "24"
@@ -60,14 +60,14 @@ backend:
     AWS_REGION: us-east-1
     AWS_ACCESS_KEY_ID: ""
     AWS_SECRET_ACCESS_KEY: ""
-    SES_FROM_EMAIL: noreply@manifimind.com
+    SES_FROM_EMAIL: noreply@magnifimind.com
 
 # Frontend configuration
 frontend:
   enabled: true
   image:
-    repository: manifimind-crm-frontend
-    tag: "0.1.12"
+    repository: magnifimind-crm-frontend
+    tag: "0.1.1"
   replicas: 1
   resources:
     requests:

@@ -1,14 +1,15 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"github.com/davealexenglish/magnifimind-crm/internal/database"
 	"github.com/davealexenglish/magnifimind-crm/internal/middleware"
 	"github.com/davealexenglish/magnifimind-crm/internal/models"
 	"github.com/davealexenglish/magnifimind-crm/pkg/utils"
+	"github.com/gin-gonic/gin"
 )
 
 // PersonHandler handles person-related requests
@@ -26,7 +27,14 @@ func (h *PersonHandler) ListPersons(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 
-	persons, total, err := h.personRepo.List(c.Request.Context(), limit, offset)
+	// Get filter parameters
+	fname := c.Query("fname")
+	lname := c.Query("lname")
+	businessFlag := c.Query("business_flag") == "true"
+
+	fmt.Printf("[DEBUG] ListPersons called with fname='%s', lname='%s', businessFlag=%v, limit=%d, offset=%d\n", fname, lname, businessFlag, limit, offset)
+
+	persons, total, err := h.personRepo.ListWithFilters(c.Request.Context(), fname, lname, businessFlag, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch persons"})
 		return

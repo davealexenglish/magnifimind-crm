@@ -141,10 +141,10 @@ func (h *TableHandler) ListRecords(tableKey string) gin.HandlerFunc {
 			return
 		}
 
-		// Build query with multi-tenant filtering if enabled
-		var query string
-		var err error
-		var rows *sql.Rows
+		// Build WHERE clause starting with multi-tenant filtering
+		var conditions []string
+		var args []interface{}
+		argNum := 1
 
 		if config.MultiTenant {
 			// Get user ID from JWT context
@@ -153,13 +153,52 @@ func (h *TableHandler) ListRecords(tableKey string) gin.HandlerFunc {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
 				return
 			}
+			conditions = append(conditions, fmt.Sprintf("sec_users_id = $%d", argNum))
+			args = append(args, userID)
+			argNum++
+		}
 
-			query = fmt.Sprintf("SELECT * FROM %s WHERE sec_users_id = $1 ORDER BY %s", config.TableName, config.OrderBy)
-			rows, err = h.db.Query(query, userID)
+		// Handle query parameters for filtering (for people table)
+		if tableKey == "people" {
+			fname := c.Query("fname")
+			if fname != "" {
+				conditions = append(conditions, fmt.Sprintf("fname ILIKE $%d", argNum))
+				args = append(args, "%"+fname+"%")
+				argNum++
+			}
+
+			lname := c.Query("lname")
+			if lname != "" {
+				conditions = append(conditions, fmt.Sprintf("lname ILIKE $%d", argNum))
+				args = append(args, "%"+lname+"%")
+				argNum++
+			}
+
+			businessFlag := c.Query("business_flag")
+			if businessFlag == "true" {
+				conditions = append(conditions, "business_flag = true")
+			}
+		}
+
+		// Build final query
+		var query string
+		if len(conditions) > 0 {
+			whereClause := "WHERE " + conditions[0]
+			for i := 1; i < len(conditions); i++ {
+				whereClause += " AND " + conditions[i]
+			}
+			query = fmt.Sprintf("SELECT * FROM %s %s ORDER BY %s", config.TableName, whereClause, config.OrderBy)
 		} else {
 			query = fmt.Sprintf("SELECT * FROM %s ORDER BY %s", config.TableName, config.OrderBy)
-			rows, err = h.db.Query(query)
 		}
+
+		fmt.Printf("[DEBUG] TableHandler ListRecords query: %s\n", query)
+		fmt.Printf("[DEBUG] TableHandler ListRecords args: %v\n", args)
+
+		// Execute query
+		var rows *sql.Rows
+		var err error
+		rows, err = h.db.Query(query, args...)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

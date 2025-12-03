@@ -2,20 +2,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "manifimind-crm.fullname" . }}-backend
+  name: {{ include "magnifimind-crm.fullname" . }}-backend
   labels:
-    app: {{ include "manifimind-crm.name" . }}
+    app: {{ include "magnifimind-crm.name" . }}
     component: backend
 spec:
   replicas: {{ .Values.backend.replicas }}
   selector:
     matchLabels:
-      app: {{ include "manifimind-crm.name" . }}
+      app: {{ include "magnifimind-crm.name" . }}
       component: backend
   template:
     metadata:
       labels:
-        app: {{ include "manifimind-crm.name" . }}
+        app: {{ include "magnifimind-crm.name" . }}
         component: backend
     spec:
       initContainers:
@@ -55,7 +55,7 @@ spec:
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ include "manifimind-crm.fullname" . }}-secrets
+              name: {{ include "magnifimind-crm.fullname" . }}-secrets
               key: db-password
         - name: DB_NAME
           value: {{ .Values.backend.env.DB_NAME | quote }}
@@ -64,14 +64,14 @@ spec:
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
-              name: {{ include "manifimind-crm.fullname" . }}-secrets
+              name: {{ include "magnifimind-crm.fullname" . }}-secrets
               key: jwt-secret
         - name: JWT_EXPIRATION_HOURS
           value: {{ .Values.backend.env.JWT_EXPIRATION_HOURS | quote }}
         - name: MASTER_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ include "manifimind-crm.fullname" . }}-secrets
+              name: {{ include "magnifimind-crm.fullname" . }}-secrets
               key: master-password
         - name: AWS_REGION
           value: {{ .Values.backend.env.AWS_REGION | quote }}

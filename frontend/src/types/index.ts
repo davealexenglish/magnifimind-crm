@@ -3,7 +3,7 @@
 export interface TableColumn {
   field: string
   label: string
-  type?: 'text' | 'email' | 'tel' | 'url' | 'number' | 'date' | 'checkbox' | 'textarea' | 'select'
+  type?: 'text' | 'email' | 'tel' | 'url' | 'number' | 'date' | 'checkbox' | 'textarea' | 'select' | 'person-picker'
   readOnly?: boolean
   showInTable?: boolean     // Whether to show this column in the table view (default: true)
   lookupEndpoint?: string  // API endpoint to fetch dropdown options (e.g., 'email-types')

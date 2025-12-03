@@ -3,9 +3,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "manifimind-crm.fullname" . }}-database
+  name: {{ include "magnifimind-crm.fullname" . }}-database
   labels:
-    {{- include "manifimind-crm.labels" . | nindent 4 }}
+    {{- include "magnifimind-crm.labels" . | nindent 4 }}
     component: database
 spec:
   type: ClusterIP
@@ -15,7 +15,7 @@ spec:
     protocol: TCP
     name: postgres
   selector:
-    app: {{ include "manifimind-crm.name" . }}
+    app: {{ include "magnifimind-crm.name" . }}
     component: database
 {{- end }}
 
@@ -24,9 +24,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "manifimind-crm.fullname" . }}-backend
+  name: {{ include "magnifimind-crm.fullname" . }}-backend
   labels:
-    {{- include "manifimind-crm.labels" . | nindent 4 }}
+    {{- include "magnifimind-crm.labels" . | nindent 4 }}
     component: backend
 spec:
   type: {{ .Values.backend.service.type }}
@@ -36,7 +36,7 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: {{ include "manifimind-crm.name" . }}
+    app: {{ include "magnifimind-crm.name" . }}
     component: backend
 {{- end }}
 
@@ -45,9 +45,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "manifimind-crm.fullname" . }}-frontend
+  name: {{ include "magnifimind-crm.fullname" . }}-frontend
   labels:
-    {{- include "manifimind-crm.labels" . | nindent 4 }}
+    {{- include "magnifimind-crm.labels" . | nindent 4 }}
     component: frontend
 spec:
   type: {{ .Values.frontend.service.type }}
@@ -60,6 +60,6 @@ spec:
     nodePort: {{ .Values.frontend.service.nodePort }}
     {{- end }}
   selector:
-    app: {{ include "manifimind-crm.name" . }}
+    app: {{ include "magnifimind-crm.name" . }}
     component: frontend
 {{- end }}

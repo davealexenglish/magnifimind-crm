@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/davealexenglish/magnifimind-crm/internal/models"
@@ -66,6 +67,92 @@ func (r *PersonRepository) List(ctx context.Context, limit, offset int) ([]*mode
 	          ORDER BY pdat_person_id LIMIT $1 OFFSET $2`
 
 	rows, err := r.db.QueryContext(ctx, query, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	persons := []*models.PdatPerson{}
+	for rows.Next() {
+		person := &models.PdatPerson{}
+		err := rows.Scan(
+			&person.ID,
+			&person.FirstName,
+			&person.LastName,
+			&person.Birthday,
+			&person.BusinessFlag,
+			&person.UserID,
+			&person.CreateDate,
+			&person.CreateUser,
+			&person.ModifyDate,
+			&person.ModifyUser,
+			&person.ActiveFlag,
+		)
+		if err != nil {
+			return nil, 0, err
+		}
+		persons = append(persons, person)
+	}
+
+	return persons, total, nil
+}
+
+// ListWithFilters returns a filtered list of persons
+func (r *PersonRepository) ListWithFilters(ctx context.Context, fname, lname string, businessFlag bool, limit, offset int) ([]*models.PdatPerson, int, error) {
+	// Build WHERE conditions
+	conditions := []string{"active_flag = 'Y'"}
+	args := []interface{}{}
+	argNum := 1
+
+	if fname != "" {
+		conditions = append(conditions, fmt.Sprintf("fname ILIKE $%d", argNum))
+		args = append(args, "%"+fname+"%")
+		argNum++
+	}
+
+	if lname != "" {
+		conditions = append(conditions, fmt.Sprintf("lname ILIKE $%d", argNum))
+		args = append(args, "%"+lname+"%")
+		argNum++
+	}
+
+	if businessFlag {
+		conditions = append(conditions, "business_flag = true")
+	}
+
+	whereClause := ""
+	for i, cond := range conditions {
+		if i == 0 {
+			whereClause = "WHERE " + cond
+		} else {
+			whereClause += " AND " + cond
+		}
+	}
+
+	// Get total count
+	var total int
+	countQuery := "SELECT COUNT(*) FROM pdat_person " + whereClause
+	err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Add LIMIT and OFFSET to args
+	limitArg := fmt.Sprintf("$%d", argNum)
+	argNum++
+	offsetArg := fmt.Sprintf("$%d", argNum)
+	args = append(args, limit, offset)
+
+	// Get persons
+	query := fmt.Sprintf(`SELECT pdat_person_id, fname, lname, birthday, business_flag, sec_users_id,
+	                 create_date, create_user, modify_date, modify_user, active_flag
+	          FROM pdat_person %s
+	          ORDER BY pdat_person_id LIMIT %s OFFSET %s`, whereClause, limitArg, offsetArg)
+
+	fmt.Printf("[DEBUG] ListWithFilters SQL Query: %s\n", query)
+	fmt.Printf("[DEBUG] ListWithFilters SQL Args: %v\n", args)
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, 0, err
 	}
