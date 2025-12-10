@@ -134,6 +134,48 @@ func (h *PersonHandler) DeletePerson(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "person deleted successfully"})
 }
 
+// HardDeletePerson permanently deletes a person and all related records
+func (h *PersonHandler) HardDeletePerson(c *gin.Context) {
+	id, err := utils.ParseInt(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid person ID"})
+		return
+	}
+
+	if err := h.personRepo.HardDelete(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to permanently delete person"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "person and all related records permanently deleted"})
+}
+
+// HardDeletePersonsBulk permanently deletes multiple persons and all related records
+func (h *PersonHandler) HardDeletePersonsBulk(c *gin.Context) {
+	var req struct {
+		IDs []int `json:"ids" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(req.IDs) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no person IDs provided"})
+		return
+	}
+
+	if err := h.personRepo.HardDeleteBulk(c.Request.Context(), req.IDs); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to permanently delete persons"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": fmt.Sprintf("%d person(s) and all related records permanently deleted", len(req.IDs)),
+		"count":   len(req.IDs),
+	})
+}
+
 // SearchPersons searches for persons
 func (h *PersonHandler) SearchPersons(c *gin.Context) {
 	searchTerm := c.Query("q")

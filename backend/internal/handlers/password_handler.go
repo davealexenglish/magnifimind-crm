@@ -30,6 +30,7 @@ type CreatePasswordRequest struct {
 	Name         *string `json:"name"`
 	Password     string  `json:"password" binding:"required"` // Already encrypted on client-side
 	OptionalLink *int    `json:"optionalLink"`
+	LinkUrl      *string `json:"linkUrl"`
 }
 
 // UpdatePasswordRequest represents a request to update a password entry
@@ -38,6 +39,7 @@ type UpdatePasswordRequest struct {
 	Name         *string `json:"name"`
 	Password     *string `json:"password"` // Already encrypted on client-side
 	OptionalLink *int    `json:"optionalLink"`
+	LinkUrl      *string `json:"linkUrl"`
 }
 
 // IMPORTANT: ALL encryption and decryption happens on the client-side ONLY.
@@ -133,6 +135,7 @@ func (h *PasswordHandler) CreatePassword(c *gin.Context) {
 		Name:       req.Name,
 		Passwd:     &req.Password, // Already encrypted by client
 		OptLinkID:  req.OptionalLink,
+		LinkUrl:    req.LinkUrl,
 		UserID:     userID,
 		CreateUser: username,
 		ModifyUser: username,
@@ -197,6 +200,10 @@ func (h *PasswordHandler) UpdatePassword(c *gin.Context) {
 	}
 	if req.OptionalLink != nil {
 		password.OptLinkID = req.OptionalLink
+	}
+	// LinkUrl can be set to empty string to clear it
+	if req.LinkUrl != nil {
+		password.LinkUrl = req.LinkUrl
 	}
 
 	// If password is provided, store it (already encrypted by client)

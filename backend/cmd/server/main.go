@@ -155,6 +155,9 @@ func main() {
 			protected.GET("/people", tableHandler.ListRecords("people"))
 			protected.GET("/people/:id", tableHandler.GetRecord("people"))
 			protected.DELETE("/people/:id", tableHandler.DeleteRecord("people"))
+			// Hard delete routes for people (permanent deletion with CASCADE)
+			protected.DELETE("/people/:id/hard", personHandler.HardDeletePerson)
+			protected.POST("/people/hard-delete-bulk", personHandler.HardDeletePersonsBulk)
 
 			// Addresses
 			protected.GET("/addresses", tableHandler.ListRecords("addresses"))

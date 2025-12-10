@@ -20,6 +20,7 @@ export interface TableManagerProps {
   apiEndpoint: string
   columns: TableColumn[]
   idField: string
+  hardDeleteEndpoint?: string  // API endpoint for permanent deletion (bulk)
 }
 
 export interface LoginProps {

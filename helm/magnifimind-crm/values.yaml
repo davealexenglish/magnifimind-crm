@@ -3,7 +3,7 @@
 
 # Global settings
 global:
-  registry: t5810.webcentricds.net
+  registry: 192.168.1.200:5000
   imagePullPolicy: Always
 
 # Database configuration
@@ -33,7 +33,7 @@ backend:
   enabled: true
   image:
     repository: magnifimind-crm-backend
-    tag: "0.1.6"
+    tag: "0.1.8"
   replicas: 1
   resources:
     requests:
@@ -67,7 +67,7 @@ frontend:
   enabled: true
   image:
     repository: magnifimind-crm-frontend
-    tag: "0.1.1"
+    tag: "0.1.8"
   replicas: 1
   resources:
     requests:

@@ -53,6 +53,7 @@ type PdatPasswd struct {
 	Name       *string   `json:"name" db:"name"`
 	Passwd     *string   `json:"passwd" db:"passwd"`
 	OptLinkID  *int      `json:"optLinkId" db:"opt_link_id"`
+	LinkUrl    *string   `json:"linkUrl" db:"link_url"`
 	UserID     int       `json:"userId" db:"sec_users_id"`
 	CreateDate time.Time `json:"createDate" db:"create_date"`
 	CreateUser string    `json:"createUser" db:"create_user"`
