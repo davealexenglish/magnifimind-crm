@@ -5,7 +5,7 @@ import type { TableManagerProps, GenericRecord } from '../types'
 import ConfirmationModal from './ConfirmationModal'
 import PersonPicker from './PersonPicker'
 
-function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProps) {
+function TableManager({ title, apiEndpoint, columns, idField, hardDeleteEndpoint }: TableManagerProps) {
   const [records, setRecords] = useState<GenericRecord[]>([])
   const [filteredRecords, setFilteredRecords] = useState<GenericRecord[]>([])
   const [searchTerm, setSearchTerm] = useState<string>('')
@@ -25,6 +25,7 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
     recordToDelete: null,
     isBulk: false
   })
+  const [hardDeleteModal, setHardDeleteModal] = useState<{ isOpen: boolean }>({ isOpen: false })
   const navigate = useNavigate()
   const [personPickerField, setPersonPickerField] = useState<string | null>(null)
 
@@ -209,6 +210,31 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
       recordToDelete: null,
       isBulk: true
     })
+  }
+
+  const handleHardDeleteClick = () => {
+    if (selectedRows.size === 0) return
+    setHardDeleteModal({ isOpen: true })
+  }
+
+  const confirmHardDelete = async () => {
+    if (!hardDeleteEndpoint || selectedRows.size === 0) return
+    setError('')
+    const token = localStorage.getItem('token')
+
+    try {
+      const ids = Array.from(selectedRows).map(id => typeof id === 'string' ? parseInt(id, 10) : id)
+      await axios.post(`/api/v1/${hardDeleteEndpoint}`, { ids }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setSelectedRows(new Set())
+      setHardDeleteModal({ isOpen: false })
+      fetchRecords()
+    } catch (err) {
+      const error = err as AxiosError<{ error: string }>
+      setError(error.response?.data?.error || 'Failed to permanently delete record(s)')
+      setHardDeleteModal({ isOpen: false })
+    }
   }
 
   const confirmDelete = async () => {
@@ -478,6 +504,27 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
           >
             🗑️ Delete Selected ({selectedRows.size})
           </button>
+
+          {hardDeleteEndpoint && (
+            <button
+              onClick={handleHardDeleteClick}
+              disabled={selectedRows.size === 0}
+              style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: selectedRows.size === 0 ? '#ccc' : '#7f1d1d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: selectedRows.size === 0 ? 'not-allowed' : 'pointer',
+                fontWeight: '500',
+                fontSize: '1rem',
+                opacity: selectedRows.size === 0 ? 0.6 : 1
+              }}
+              title="Permanently delete selected records and all related data (addresses, emails, phones, notes, links)"
+            >
+              ☠️ Hard Delete ({selectedRows.size})
+            </button>
+          )}
         </div>
 
         {/* Add/Edit Form */}
@@ -776,6 +823,37 @@ function TableManager({ title, apiEndpoint, columns, idField }: TableManagerProp
           selectedPersonId={formData[personPickerField]}
         />
       )}
+
+      {/* Hard Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={hardDeleteModal.isOpen}
+        title="⚠️ PERMANENT DELETE"
+        message={
+          <div>
+            <p style={{ color: '#7f1d1d', fontWeight: 'bold', fontSize: '1.1rem' }}>
+              WARNING: This action is IRREVERSIBLE!
+            </p>
+            <p>You are about to <strong>permanently delete {selectedRows.size} record(s)</strong>.</p>
+            <p>This will also delete ALL related data:</p>
+            <ul style={{ textAlign: 'left', marginLeft: '1rem' }}>
+              <li>Addresses</li>
+              <li>Email addresses</li>
+              <li>Phone numbers</li>
+              <li>Notes</li>
+              <li>Links</li>
+              <li>Calendar associations</li>
+            </ul>
+            <p style={{ marginTop: '1rem', fontWeight: 'bold', color: '#7f1d1d' }}>
+              This data CANNOT be recovered!
+            </p>
+          </div>
+        }
+        confirmText="PERMANENTLY DELETE"
+        cancelText="Cancel"
+        onConfirm={confirmHardDelete}
+        onCancel={() => setHardDeleteModal({ isOpen: false })}
+        isDangerous={true}
+      />
     </div>
   )
 }

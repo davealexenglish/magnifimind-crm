@@ -19,6 +19,7 @@ function PeopleTable() {
       apiEndpoint="people"
       columns={columns}
       idField="pdat_person_id"
+      hardDeleteEndpoint="people/hard-delete-bulk"
     />
   )
 }

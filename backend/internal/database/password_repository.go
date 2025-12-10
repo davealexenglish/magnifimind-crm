@@ -20,7 +20,7 @@ func NewPasswordRepository(db *DB) *PasswordRepository {
 
 // FindByID finds a password entry by ID
 func (r *PasswordRepository) FindByID(ctx context.Context, id int) (*models.PdatPasswd, error) {
-	query := `SELECT pdat_passwd_id, descr, name, passwd, opt_link_id, sec_users_id,
+	query := `SELECT pdat_passwd_id, descr, name, passwd, opt_link_id, link_url, sec_users_id,
 	                 create_date, create_user, modify_date, modify_user, active_flag
 	          FROM pdat_passwd WHERE pdat_passwd_id = $1 AND active_flag = 'Y'`
 
@@ -31,6 +31,7 @@ func (r *PasswordRepository) FindByID(ctx context.Context, id int) (*models.Pdat
 		&password.Name,
 		&password.Passwd,
 		&password.OptLinkID,
+		&password.LinkUrl,
 		&password.UserID,
 		&password.CreateDate,
 		&password.CreateUser,
@@ -51,7 +52,7 @@ func (r *PasswordRepository) FindByID(ctx context.Context, id int) (*models.Pdat
 
 // FindByUserID finds all password entries for a user
 func (r *PasswordRepository) FindByUserID(ctx context.Context, userID int) ([]*models.PdatPasswd, error) {
-	query := `SELECT pdat_passwd_id, descr, name, passwd, opt_link_id, sec_users_id,
+	query := `SELECT pdat_passwd_id, descr, name, passwd, opt_link_id, link_url, sec_users_id,
 	                 create_date, create_user, modify_date, modify_user, active_flag
 	          FROM pdat_passwd WHERE sec_users_id = $1 AND active_flag = 'Y'
 	          ORDER BY descr, name`
@@ -71,6 +72,7 @@ func (r *PasswordRepository) FindByUserID(ctx context.Context, userID int) ([]*m
 			&password.Name,
 			&password.Passwd,
 			&password.OptLinkID,
+			&password.LinkUrl,
 			&password.UserID,
 			&password.CreateDate,
 			&password.CreateUser,
@@ -98,7 +100,7 @@ func (r *PasswordRepository) List(ctx context.Context, userID int, limit, offset
 	}
 
 	// Get passwords
-	query := `SELECT pdat_passwd_id, descr, name, passwd, opt_link_id, sec_users_id,
+	query := `SELECT pdat_passwd_id, descr, name, passwd, opt_link_id, link_url, sec_users_id,
 	                 create_date, create_user, modify_date, modify_user, active_flag
 	          FROM pdat_passwd WHERE sec_users_id = $1 AND active_flag = 'Y'
 	          ORDER BY descr, name LIMIT $2 OFFSET $3`
@@ -118,6 +120,7 @@ func (r *PasswordRepository) List(ctx context.Context, userID int, limit, offset
 			&password.Name,
 			&password.Passwd,
 			&password.OptLinkID,
+			&password.LinkUrl,
 			&password.UserID,
 			&password.CreateDate,
 			&password.CreateUser,
@@ -136,9 +139,9 @@ func (r *PasswordRepository) List(ctx context.Context, userID int, limit, offset
 
 // Create creates a new password entry (password should be encrypted before calling this)
 func (r *PasswordRepository) Create(ctx context.Context, password *models.PdatPasswd) error {
-	query := `INSERT INTO pdat_passwd (descr, name, passwd, opt_link_id, sec_users_id,
+	query := `INSERT INTO pdat_passwd (descr, name, passwd, opt_link_id, link_url, sec_users_id,
 	                                    create_date, create_user, modify_date, modify_user, active_flag)
-	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING pdat_passwd_id`
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING pdat_passwd_id`
 
 	now := time.Now()
 	return r.db.QueryRowContext(ctx, query,
@@ -146,6 +149,7 @@ func (r *PasswordRepository) Create(ctx context.Context, password *models.PdatPa
 		password.Name,
 		password.Passwd, // Should already be encrypted
 		password.OptLinkID,
+		password.LinkUrl,
 		password.UserID,
 		now,
 		password.CreateUser,
@@ -157,15 +161,16 @@ func (r *PasswordRepository) Create(ctx context.Context, password *models.PdatPa
 
 // Update updates a password entry (password should be encrypted before calling this)
 func (r *PasswordRepository) Update(ctx context.Context, password *models.PdatPasswd) error {
-	query := `UPDATE pdat_passwd SET descr = $1, name = $2, passwd = $3, opt_link_id = $4,
-	                                  modify_date = $5, modify_user = $6, active_flag = $7
-	          WHERE pdat_passwd_id = $8`
+	query := `UPDATE pdat_passwd SET descr = $1, name = $2, passwd = $3, opt_link_id = $4, link_url = $5,
+	                                  modify_date = $6, modify_user = $7, active_flag = $8
+	          WHERE pdat_passwd_id = $9`
 
 	_, err := r.db.ExecContext(ctx, query,
 		password.Descr,
 		password.Name,
 		password.Passwd, // Should already be encrypted
 		password.OptLinkID,
+		password.LinkUrl,
 		time.Now(),
 		password.ModifyUser,
 		password.ActiveFlag,
@@ -195,7 +200,7 @@ func (r *PasswordRepository) Search(ctx context.Context, userID int, searchTerm 
 	}
 
 	// Get passwords
-	query := `SELECT pdat_passwd_id, descr, name, passwd, opt_link_id, sec_users_id,
+	query := `SELECT pdat_passwd_id, descr, name, passwd, opt_link_id, link_url, sec_users_id,
 	                 create_date, create_user, modify_date, modify_user, active_flag
 	          FROM pdat_passwd
 	          WHERE sec_users_id = $1 AND active_flag = 'Y' AND (descr ILIKE $2 OR name ILIKE $2)
@@ -216,6 +221,7 @@ func (r *PasswordRepository) Search(ctx context.Context, userID int, searchTerm 
 			&password.Name,
 			&password.Passwd,
 			&password.OptLinkID,
+			&password.LinkUrl,
 			&password.UserID,
 			&password.CreateDate,
 			&password.CreateUser,

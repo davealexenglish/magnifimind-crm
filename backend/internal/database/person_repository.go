@@ -231,6 +231,35 @@ func (r *PersonRepository) Delete(ctx context.Context, id int) error {
 	return err
 }
 
+// HardDelete permanently deletes a person and all related records (via CASCADE)
+func (r *PersonRepository) HardDelete(ctx context.Context, id int) error {
+	query := `DELETE FROM pdat_person WHERE pdat_person_id = $1`
+	_, err := r.db.ExecContext(ctx, query, id)
+	return err
+}
+
+// HardDeleteBulk permanently deletes multiple persons and all related records (via CASCADE)
+func (r *PersonRepository) HardDeleteBulk(ctx context.Context, ids []int) error {
+	if len(ids) == 0 {
+		return nil
+	}
+
+	// Build placeholders for IN clause
+	placeholders := ""
+	args := make([]interface{}, len(ids))
+	for i, id := range ids {
+		if i > 0 {
+			placeholders += ", "
+		}
+		placeholders += fmt.Sprintf("$%d", i+1)
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`DELETE FROM pdat_person WHERE pdat_person_id IN (%s)`, placeholders)
+	_, err := r.db.ExecContext(ctx, query, args...)
+	return err
+}
+
 // Search searches for persons by name
 func (r *PersonRepository) Search(ctx context.Context, searchTerm string, limit, offset int) ([]*models.PdatPerson, int, error) {
 	// Get total count
