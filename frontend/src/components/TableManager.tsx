@@ -345,48 +345,8 @@ function TableManager({ title, apiEndpoint, columns, idField, hardDeleteEndpoint
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      <header style={{ backgroundColor: '#646cff', color: 'white', padding: '1rem 2rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <button
-              onClick={() => navigate('/dashboard')}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: 'white',
-                color: '#646cff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: '500'
-              }}
-            >
-              ← Dashboard
-            </button>
-            <h1 style={{ margin: 0, fontSize: '1.5rem' }}>{title}</h1>
-          </div>
-          <button
-            onClick={() => {
-              localStorage.removeItem('token')
-              navigate('/login')
-              window.location.reload()
-            }}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: 'white',
-              color: '#646cff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            Logout
-          </button>
-        </div>
-      </header>
-
-      <main style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+      <h1 style={{ margin: '0 0 1.5rem 0', fontSize: '1.75rem', color: '#213547' }}>{title}</h1>
         {error && (
           <div style={{ padding: '1rem', backgroundColor: '#ffebee', color: '#d32f2f', borderRadius: '4px', marginBottom: '1rem' }}>
             {error}
@@ -796,7 +756,6 @@ function TableManager({ title, apiEndpoint, columns, idField, hardDeleteEndpoint
             </div>
           </>
         )}
-      </main>
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal

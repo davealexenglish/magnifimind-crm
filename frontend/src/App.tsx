@@ -4,6 +4,7 @@ import Login from './components/Login'
 import Layout from './components/Layout'
 import Dashboard from './components/Dashboard'
 import PasswordVault from './components/PasswordVault'
+import BackupRestore from './components/BackupRestore'
 import PeopleTable from './components/PeopleTable'
 import {
   AddressesTable,
@@ -81,6 +82,12 @@ function App() {
           <Route
             path="/roles"
             element={<ProtectedRoute><RolesTable /></ProtectedRoute>}
+          />
+
+          {/* Administration */}
+          <Route
+            path="/backup-restore"
+            element={<ProtectedRoute><BackupRestore /></ProtectedRoute>}
           />
 
           {/* Default route */}

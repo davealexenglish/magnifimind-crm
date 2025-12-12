@@ -1,100 +1,117 @@
-# Session State - December 3, 2025
+# Session State - December 10, 2025
 
 ## Current Status
 
-### Kubernetes Deployment - **FAILED**
-The helm install of magnifimind-crm failed due to Docker registry connectivity issues:
-- Registry at `t5810.webcentricds.net` is not responding (connection refused on port 80)
-- Pods stuck in `ImagePullBackOff` state
-- Helm install timed out waiting for conditions
+### Kubernetes Deployment - **RUNNING on r740**
+Successfully deployed to r740 cluster:
+- Registry: `192.168.1.200:5000`
+- All pods running in `magnifimind-crm` namespace
+- Frontend accessible via NodePort 30081
 
-**Action Required**: Start Docker registry service on t5810 server, then reinstall:
 ```bash
-export KUBECONFIG=$HOME/.kube/config-t5810
-helm uninstall magnifimind-crm -n magnifimind-crm  # Clean up failed install
-# Start registry on t5810 first!
-helm install magnifimind-crm /Users/denglish/gitDevelopment/github/davealexenglish/magnifimind-crm/helm/magnifimind-crm -n magnifimind-crm
+KUBECONFIG=~/.kube/config-r740 kubectl get pods -n magnifimind-crm
 ```
 
-### Latest Deployed Frontend Version
-**v0.1.27** - Successfully built and pushed to registry before it went down
-- Optimized password save (uses API response instead of full reload)
-- Master password autofill prevention improvements
-- Two-column form layout with reduced padding
-- Instructions left-aligned in PasswordVault
+### Current Image Versions
+- **Frontend**: `0.1.9`
+- **Backend**: `0.1.10`
+- **Database**: `0.1.11`
 
 ### Git Status - Uncommitted Changes
 ```
+Branch: add-person-picker
+
 Staged for commit:
   A  backend/internal/database/password_repository.go
   A  backend/internal/handlers/password_handler.go
-  AM src/components/PasswordVault.tsx
-  AM src/components/PersonPicker.tsx
+  AM frontend/src/components/PasswordVault.tsx
+  AM frontend/src/components/PersonPicker.tsx
 
 Modified but not staged:
-  M backend/internal/database/person_repository.go
-  M backend/internal/handlers/person_handler.go
-  M backend/internal/handlers/table_handler.go
-  M src/components/TableManager.tsx
-  M src/components/tables.tsx
-  M src/types/index.ts
-  M helm/magnifimind-crm/values.yaml
+  M  backend/internal/database/person_repository.go
+  M  backend/internal/handlers/person_handler.go
+  M  backend/internal/handlers/table_handler.go
+  M  frontend/src/components/TableManager.tsx
+  M  frontend/src/components/tables.tsx
+  M  frontend/src/types/index.ts
+  M  helm/magnifimind-crm/values.yaml
 
 Untracked:
-  ?? CLAUDE.md  (NEW - guidance document for future Claude sessions)
+  ?? CLAUDE.md
+  ?? SESSION_STATE.md
 ```
 
-## Recent Work Summary
+## Recent Work Summary (This Session - Dec 10, 2025)
 
-### Password Vault Fixes (v0.1.22 - v0.1.27)
-1. ✅ Fixed save functionality - temporary ID assignment in PasswordCollection.add()
-2. ✅ Optimized save - uses API response instead of reloading all passwords
-3. ✅ Master password autofill prevention (autoComplete="new-password")
-4. ✅ Instructions left-aligned
-5. ✅ Lock button properly disabled for new entries
+### Navigation Cleanup
+1. Converted navigation to dropdown menus (Navigation.tsx):
+   - Contact Management dropdown (People, Addresses, Emails, Phones, Notes, Links)
+   - Security dropdown (Passwords, Accounts, Users, Roles)
+   - Administration dropdown (Backup & Restore)
+   - Click-to-open, auto-close on outside click
+   - Icons in dropdown items
+   - Fixed "Manifimind" typo to "Magnifimind"
 
-### Form Layout Changes (v0.1.23)
-- Converted all TableManager forms to two-column table layout
-- Labels on left (right-aligned), inputs on right
-- Dense spacing (padding: 0.35rem)
+2. Removed redundant headers from TableManager.tsx:
+   - Removed "← Dashboard" button
+   - Removed duplicate "Logout" button
+   - Pages now show just title, navigation handled at top level
 
-### Pagination Fix (v0.1.24)
-- Added useEffect to reset page when itemsPerPage changes
-- Prevents stale page numbers when changing per-page dropdown
+### Backup & Restore Feature
+1. Created BackupRestore.tsx component:
+   - Download backup button (pg_dump binary format)
+   - Upload & restore with confirmation modal
+   - Warning about data truncation
 
-### PersonPicker Improvements (v0.1.20 - v0.1.21)
-- Removed window.confirm dialogs (use ConfirmationModal instead)
-- Display full name (fname + ' ' + lname) instead of person ID
-- Database-level filtering for searches
+2. Created admin_handler.go in backend:
+   - `GET /api/v1/admin/backup` - streams pg_dump to client
+   - `POST /api/v1/admin/restore` - accepts file upload, runs pg_restore --clean
+
+3. Updated backend Dockerfile to include `postgresql-client` package
+
+### Previous Session Work
+- Hard delete for People (CASCADE deletes)
+- Password vault fixes (Lock button for new passwords, _wasNew flag)
+- Navigation warning for unsaved changes
+- Browser password save dialog suppression
+
+## Deployment Commands
+
+### Deploy to r740
+```bash
+# Build
+cd frontend && npm run build
+docker buildx build --platform linux/amd64 -t 192.168.1.200:5000/magnifimind-crm-frontend:0.1.X .
+docker push 192.168.1.200:5000/magnifimind-crm-frontend:0.1.X
+
+cd ../backend
+docker buildx build --platform linux/amd64 -t 192.168.1.200:5000/magnifimind-crm-backend:0.1.X .
+docker push 192.168.1.200:5000/magnifimind-crm-backend:0.1.X
+
+# Update values.yaml with new tags, then:
+KUBECONFIG=~/.kube/config-r740 helm upgrade magnifimind-crm ./helm/magnifimind-crm -n magnifimind-crm
+```
 
 ## Key Architecture Notes
 
 ### Password Vault Client-Side Encryption
 - Master password NEVER sent to server
 - AES-256-CBC encryption happens in browser
-- State machine tracks: ENCRYPTED → DECRYPTED → MODIFIED_DECRYPTED → NEW
-- Temporary IDs for new entries (replaced with DB ID after save)
-- `passwordStateManager.js` manages state transitions
+- State machine: ENCRYPTED → DECRYPTED → MODIFIED_DECRYPTED → NEW
+- Lock encrypts modified/new passwords before save
+- `_pendingSaveEncrypted` and `_wasNew` flags for proper save handling
 
-### Multi-Tenant Data Model
-- All `pdat_*` tables filtered by `sec_users_id`
-- Views (`v_active_people`, `v_person_addresses`) enforce security + active_flag
-- Read from views, write to base tables
-- TableHandler automatically applies user filtering when `MultiTenant: true`
+### Navigation System
+- Dropdown-based navigation in Navigation.tsx
+- Layout.tsx wraps pages with Navigation
+- Routes defined in App.tsx
 
-### Generic TableManager Pattern
-- Single React component handles all CRUD tables
-- Column configuration drives behavior (type, lookups, readOnly, showInTable)
-- PersonPicker integration via `type: 'person-picker'`
-- Two-column form layout standard
-
-## Background Processes (will be terminated)
-- Port-forward to backend (bash 331a91)
-- Helm upgrade attempts (bash 98a7c1, 7d8143)
-- These are orphaned processes that can be killed
+### Admin Features
+- Backup uses pg_dump with custom format (-Fc)
+- Restore uses pg_restore with --clean --if-exists
+- Backend container includes postgresql-client package
 
 ## Next Session Priorities
-1. **Fix Docker registry** on t5810 (prerequisite for everything)
-2. **Reinstall Kubernetes deployment** after registry is up
-3. **Consider committing changes** or at least staging CLAUDE.md
-4. **Test Password Vault** end-to-end after deployment is working
+1. Test backup/restore functionality
+2. Consider committing changes to git
+3. Role-based access control for admin features (future)
