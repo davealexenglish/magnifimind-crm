@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { apiFetch } from '../utils/api'
 import ConfirmationModal from './ConfirmationModal'
 
 function BackupRestore() {
@@ -17,12 +18,8 @@ function BackupRestore() {
     setSuccess(null)
 
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/v1/admin/backup', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await apiFetch('/api/v1/admin/backup', {
+        method: 'GET'
       })
 
       if (!response.ok) {
@@ -79,15 +76,11 @@ function BackupRestore() {
     setSuccess(null)
 
     try {
-      const token = localStorage.getItem('token')
       const formData = new FormData()
       formData.append('backup', restoreModal.file)
 
-      const response = await fetch('/api/v1/admin/restore', {
+      const response = await apiFetch('/api/v1/admin/restore', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
         body: formData
       })
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, type ChangeEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import axios, { type AxiosError } from 'axios'
+import type { AxiosError } from 'axios'
+import api from '../utils/api'
 import type { TableManagerProps, GenericRecord } from '../types'
 import ConfirmationModal from './ConfirmationModal'
 import PersonPicker from './PersonPicker'
@@ -26,7 +26,6 @@ function TableManager({ title, apiEndpoint, columns, idField, hardDeleteEndpoint
     isBulk: false
   })
   const [hardDeleteModal, setHardDeleteModal] = useState<{ isOpen: boolean }>({ isOpen: false })
-  const navigate = useNavigate()
   const [personPickerField, setPersonPickerField] = useState<string | null>(null)
 
   // Fetch records
@@ -59,10 +58,7 @@ function TableManager({ title, apiEndpoint, columns, idField, hardDeleteEndpoint
       if (!col.lookupEndpoint) continue
 
       try {
-        const token = localStorage.getItem('token')
-        const response = await axios.get<GenericRecord[]>(`/api/v1/${col.lookupEndpoint}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        const response = await api.get<GenericRecord[]>(`/${col.lookupEndpoint}`)
         setLookupData(prev => ({ ...prev, [col.field]: response.data }))
       } catch (err) {
         console.error(`Failed to fetch lookup data for ${col.field}:`, err)
@@ -125,20 +121,13 @@ function TableManager({ title, apiEndpoint, columns, idField, hardDeleteEndpoint
     setLoading(true)
     setError('')
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get<GenericRecord[]>(`/api/v1/${apiEndpoint}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await api.get<GenericRecord[]>(`/${apiEndpoint}`)
       setRecords(response.data)
       setFilteredRecords(response.data)
     } catch (err) {
       const error = err as AxiosError<{ error: string }>
-      if (error.response?.status === 401) {
-        localStorage.removeItem('token')
-        navigate('/login')
-      } else {
-        setError(error.response?.data?.error || 'Failed to fetch records')
-      }
+      // 401 is handled by api interceptor
+      setError(error.response?.data?.error || 'Failed to fetch records')
     } finally {
       setLoading(false)
     }
@@ -164,8 +153,6 @@ function TableManager({ title, apiEndpoint, columns, idField, hardDeleteEndpoint
   const handleSave = async () => {
     setError('')
     try {
-      const token = localStorage.getItem('token')
-
       // Convert boolean to 'Y'/'N' for checkbox fields before sending
       const dataToSend: GenericRecord = { ...formData }
       columns.forEach(col => {
@@ -176,14 +163,10 @@ function TableManager({ title, apiEndpoint, columns, idField, hardDeleteEndpoint
 
       if (editingRecord) {
         // Update existing record
-        await axios.put(`/api/v1/${apiEndpoint}/${editingRecord}`, dataToSend, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        await api.put(`/${apiEndpoint}/${editingRecord}`, dataToSend)
       } else {
         // Create new record
-        await axios.post(`/api/v1/${apiEndpoint}`, dataToSend, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        await api.post(`/${apiEndpoint}`, dataToSend)
       }
       setEditingRecord(null)
       setShowAddForm(false)
@@ -220,13 +203,10 @@ function TableManager({ title, apiEndpoint, columns, idField, hardDeleteEndpoint
   const confirmHardDelete = async () => {
     if (!hardDeleteEndpoint || selectedRows.size === 0) return
     setError('')
-    const token = localStorage.getItem('token')
 
     try {
       const ids = Array.from(selectedRows).map(id => typeof id === 'string' ? parseInt(id, 10) : id)
-      await axios.post(`/api/v1/${hardDeleteEndpoint}`, { ids }, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await api.post(`/${hardDeleteEndpoint}`, { ids })
       setSelectedRows(new Set())
       setHardDeleteModal({ isOpen: false })
       fetchRecords()
@@ -239,24 +219,19 @@ function TableManager({ title, apiEndpoint, columns, idField, hardDeleteEndpoint
 
   const confirmDelete = async () => {
     setError('')
-    const token = localStorage.getItem('token')
 
     try {
       if (deleteModal.isBulk) {
         // Bulk delete
         const deletePromises = Array.from(selectedRows).map(id =>
-          axios.delete(`/api/v1/${apiEndpoint}/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          })
+          api.delete(`/${apiEndpoint}/${id}`)
         )
         await Promise.all(deletePromises)
         setSelectedRows(new Set())
       } else if (deleteModal.recordToDelete) {
         // Single delete
         const id = deleteModal.recordToDelete[idField]
-        await axios.delete(`/api/v1/${apiEndpoint}/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        await api.delete(`/${apiEndpoint}/${id}`)
       }
       fetchRecords()
     } catch (err) {

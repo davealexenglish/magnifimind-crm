@@ -26,8 +26,8 @@ func NewAdminHandler(cfg *config.Config) *AdminHandler {
 // Backup creates a binary backup of the PostgreSQL database and streams it to the client
 func (h *AdminHandler) Backup(c *gin.Context) {
 	// Generate filename with timestamp
-	timestamp := time.Now().Format("2006-01-02_150405")
-	filename := fmt.Sprintf("magnifimind_backup_%s.dump", timestamp)
+	timestamp := time.Now().Format("20060102_150405")
+	filename := fmt.Sprintf("magnifimind-crm_backup_%s.dump", timestamp)
 
 	// Set headers for file download
 	c.Header("Content-Type", "application/octet-stream")
