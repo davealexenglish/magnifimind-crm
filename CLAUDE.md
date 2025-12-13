@@ -22,27 +22,32 @@ npm run build               # Build for production
 npm run preview             # Preview production build
 ```
 
-### Docker & Kubernetes Deployment
+### Docker & Kubernetes Deployment (r740 cluster)
 ```bash
-# Build and push Docker images (amd64 for t5810 server)
+# Build and push Docker images (amd64 for r740 server)
 cd frontend
 npm run build
-docker buildx build --platform linux/amd64 -t t5810.webcentricds.net/magnifimind-crm-frontend:0.1.X .
-docker push t5810.webcentricds.net/magnifimind-crm-frontend:0.1.X
+docker buildx build --platform linux/amd64 -t 192.168.1.200:5000/magnifimind-crm-frontend:0.1.X .
+docker push 192.168.1.200:5000/magnifimind-crm-frontend:0.1.X
 
 cd ../backend
-docker buildx build --platform linux/amd64 -t t5810.webcentricds.net/magnifimind-crm-backend:0.1.X .
-docker push t5810.webcentricds.net/magnifimind-crm-backend:0.1.X
+docker buildx build --platform linux/amd64 -t 192.168.1.200:5000/magnifimind-crm-backend:0.1.X .
+docker push 192.168.1.200:5000/magnifimind-crm-backend:0.1.X
 
-# Deploy via Helm (uses KUBECONFIG at $HOME/.kube/config-t5810)
+# Deploy via Helm (uses KUBECONFIG at ~/.kube/config-r740)
 cd ../helm/magnifimind-crm
 # Update values.yaml with new image tags
-KUBECONFIG=/Users/denglish/.kube/config-t5810 helm upgrade magnifimind-crm . -n magnifimind-crm
+KUBECONFIG=~/.kube/config-r740 helm upgrade magnifimind-crm . -n magnifimind-crm
 
 # Check deployment status
-KUBECONFIG=/Users/denglish/.kube/config-t5810 kubectl get pods -n magnifimind-crm
-KUBECONFIG=/Users/denglish/.kube/config-t5810 kubectl logs -n magnifimind-crm <pod-name>
+KUBECONFIG=~/.kube/config-r740 kubectl get pods -n magnifimind-crm
+KUBECONFIG=~/.kube/config-r740 kubectl logs -n magnifimind-crm <pod-name>
 ```
+
+**Current Image Versions** (as of Dec 2025):
+- Frontend: `0.1.9`
+- Backend: `0.1.10`
+- Database: `0.1.11`
 
 ## Architecture Overview
 
@@ -71,7 +76,24 @@ KUBECONFIG=/Users/denglish/.kube/config-t5810 kubectl logs -n magnifimind-crm <p
    - Configuration specifies: table name, ID column, columns, multi-tenant flag, view name
    - Automatically applies user filtering when `MultiTenant: true`
 
+5. **Admin Handler** (`internal/handlers/admin_handler.go`)
+   - Database backup via `pg_dump` (binary format)
+   - Database restore via `pg_restore` with `--clean` to truncate existing data
+
 ### Frontend Architecture
+
+#### Navigation System
+The app uses a dropdown-based navigation (`src/components/Navigation.tsx`):
+- **Dashboard**: Home page with section cards
+- **Contact Management** dropdown: People, Addresses, Emails, Phones, Notes, Links
+- **Security** dropdown: Passwords, Accounts, Users, Roles
+- **Administration** dropdown: Backup & Restore
+
+Features:
+- Click-to-open dropdowns with icons
+- Auto-close when clicking outside or navigating
+- Active section highlighting
+- Logout button in header
 
 #### TableManager Component Pattern
 - **Generic CRUD Component** (`src/components/TableManager.tsx`)
@@ -80,7 +102,8 @@ KUBECONFIG=/Users/denglish/.kube/config-t5810 kubectl logs -n magnifimind-crm <p
   - Search/filter
   - Pagination (client-side)
   - Inline add/edit forms (two-column layout: label left, input right)
-  - Bulk selection and delete
+  - Bulk selection and soft delete
+  - Hard delete option (for People table - CASCADE deletes related records)
   - Dynamic field types: text, email, tel, url, textarea, checkbox, select, person-picker
 
 #### Column Configuration
@@ -111,6 +134,8 @@ const columns: TableColumn[] = [
    - `PasswordState`: ENCRYPTED, DECRYPTED, MODIFIED_DECRYPTED, NEW
    - Tracks state transitions to ensure passwords encrypted exactly once before save
    - Temporary IDs for new entries (replaced with database ID after save)
+   - `_pendingSaveEncrypted` flag for pre-encrypted values from Lock operation
+   - `_wasNew` flag to track new entries that were locked before save
 
 3. **Server Role** (`backend/internal/handlers/password_handler.go`)
    - Stores encrypted blobs only
@@ -118,9 +143,17 @@ const columns: TableColumn[] = [
    - Returns encrypted passwords that client decrypts locally
 
 **Workflow**:
-- Add new → State: NEW (plaintext) → Save → Encrypt → POST → Server stores encrypted → Response with DB ID
+- Add new → State: NEW (plaintext) → Lock (encrypts) → Save → POST → Server stores encrypted
 - View existing → Decrypt with master password → State: DECRYPTED → Lock → State: ENCRYPTED
-- Edit decrypted → State: MODIFIED_DECRYPTED → Save → Re-encrypt → PUT → Server updates
+- Edit decrypted → State: MODIFIED_DECRYPTED → Lock (re-encrypts) → Save → PUT → Server updates
+
+**Navigation Warning**: Warns user before leaving page with unsaved changes.
+
+#### Backup & Restore Component
+`src/components/BackupRestore.tsx` provides:
+- **Backup**: Downloads PostgreSQL binary dump file (.dump format)
+- **Restore**: Upload backup file to restore database (with confirmation modal)
+- Warning that restore will truncate all existing data
 
 ### Database Views vs Base Tables
 **Read operations**: Use views (e.g., `v_active_people`, `v_person_addresses`)
@@ -158,12 +191,24 @@ GET    /api/v1/{resource}/search?q=term # Search
 
 Resources: `people`, `addresses`, `emails`, `phones`, `notes`, `links`, `passwords`
 
+#### Hard Delete Endpoints (People only)
+```
+DELETE /api/v1/people/:id/hard         # Permanently delete single person + CASCADE
+POST   /api/v1/people/hard-delete-bulk # Permanently delete multiple people + CASCADE
+```
+
 #### Authentication Endpoints
 ```
 POST /api/v1/auth/register  # Returns JWT token
 POST /api/v1/auth/login     # Returns JWT token
 POST /api/v1/auth/refresh   # Refresh token
 POST /api/v1/auth/logout    # Logout
+```
+
+#### Administration Endpoints
+```
+GET  /api/v1/admin/backup   # Download PostgreSQL binary backup (.dump)
+POST /api/v1/admin/restore  # Upload and restore backup (multipart form: 'backup' field)
 ```
 
 ### Environment Configuration
@@ -175,7 +220,8 @@ Required environment variables for backend:
 
 Helm values in `helm/magnifimind-crm/values.yaml`:
 - Image tags for `database`, `backend`, `frontend`
-- NodePort `30081` for frontend access on t5810
+- Registry: `192.168.1.200:5000` (r740 cluster)
+- NodePort `30081` for frontend access
 
 ## Common Development Workflows
 
@@ -185,20 +231,46 @@ Helm values in `helm/magnifimind-crm/values.yaml`:
 3. Add routes in `backend/cmd/server/main.go` protected routes section
 4. Create database view if needed (for `active_flag` filtering and JOINs)
 
-### Deploying Frontend Changes
-1. Make code changes in `frontend/src/`
-2. Build: `npm run build`
-3. Docker build with incremented version tag
-4. Push to t5810 registry
-5. Update `helm/magnifimind-crm/values.yaml` frontend tag
-6. Helm upgrade (uses KUBECONFIG at `~/.kube/config-t5810`)
+### Deploying Changes
+1. Make code changes
+2. Build frontend: `cd frontend && npm run build`
+3. Docker build with incremented version tag for frontend and/or backend
+4. Push to registry at `192.168.1.200:5000`
+5. Update `helm/magnifimind-crm/values.yaml` with new tags
+6. Helm upgrade: `KUBECONFIG=~/.kube/config-r740 helm upgrade magnifimind-crm ./helm/magnifimind-crm -n magnifimind-crm`
 
 ### Uninstall and Reinstall Kubernetes Deployment
 ```bash
-export KUBECONFIG=$HOME/.kube/config-t5810
+export KUBECONFIG=~/.kube/config-r740
 helm uninstall magnifimind-crm -n magnifimind-crm
 kubectl wait --for=delete pod --all -n magnifimind-crm --timeout=60s
-helm install magnifimind-crm /path/to/helm/magnifimind-crm -n magnifimind-crm
+helm install magnifimind-crm ./helm/magnifimind-crm -n magnifimind-crm
 ```
 
-**Note**: Registry at `t5810.webcentricds.net` must be running for image pulls to succeed. If pods show `ImagePullBackOff`, the Docker registry service needs to be started on t5810.
+### Backend Container Notes
+The backend container includes `postgresql-client` package for backup/restore functionality:
+- `pg_dump` for creating backups
+- `pg_restore` for restoring backups
+
+## Key Files Reference
+
+### Frontend
+- `src/App.tsx` - Route definitions
+- `src/components/Navigation.tsx` - Dropdown navigation
+- `src/components/Layout.tsx` - Page layout wrapper
+- `src/components/TableManager.tsx` - Generic CRUD table component
+- `src/components/PasswordVault.tsx` - Password management with client-side encryption
+- `src/components/BackupRestore.tsx` - Database backup/restore UI
+- `src/components/PersonPicker.tsx` - Person selection modal
+- `src/components/tables.tsx` - Table column definitions
+- `src/utils/passwordEncryption.js` - AES-256-CBC encryption
+- `src/utils/passwordStateManager.js` - Password state machine
+
+### Backend
+- `cmd/server/main.go` - Server entry point and route setup
+- `internal/handlers/table_handler.go` - Generic table CRUD handler
+- `internal/handlers/person_handler.go` - Person-specific handlers (including hard delete)
+- `internal/handlers/password_handler.go` - Password vault endpoints
+- `internal/handlers/admin_handler.go` - Backup/restore endpoints
+- `internal/middleware/auth.go` - JWT authentication
+- `pkg/config/config.go` - Configuration loading

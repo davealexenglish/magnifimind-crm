@@ -4,6 +4,7 @@ function Dashboard() {
   const navSections = [
     {
       title: 'Contact Management',
+      icon: '📇',
       items: [
         { name: 'People', path: '/people', icon: '👤' },
         { name: 'Addresses', path: '/addresses', icon: '📍' },
@@ -15,24 +16,32 @@ function Dashboard() {
     },
     {
       title: 'Security',
+      icon: '🔒',
       items: [
         { name: 'Password Vault', path: '/passwords', icon: '🔐' },
         { name: 'User Accounts', path: '/accounts', icon: '👥' },
         { name: 'Users', path: '/users', icon: '🧑' },
         { name: 'Roles', path: '/roles', icon: '🎭' },
       ]
+    },
+    {
+      title: 'Administration',
+      icon: '⚙️',
+      items: [
+        { name: 'Backup & Restore', path: '/backup-restore', icon: '💾' },
+      ]
     }
   ]
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <h2 style={{ color: '#213547', marginBottom: '2rem' }}>Welcome to Manifimind CRM</h2>
+      <h2 style={{ color: '#213547', marginBottom: '2rem' }}>Welcome to Magnifimind CRM</h2>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
         {navSections.map((section, idx) => (
           <div key={idx} style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             <h3 style={{ color: '#213547', marginTop: 0, marginBottom: '1rem', borderBottom: '2px solid #646cff', paddingBottom: '0.5rem' }}>
-              {section.title}
+              {section.icon} {section.title}
             </h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {section.items.map((item, itemIdx) => (

@@ -60,6 +60,7 @@ func main() {
 	personHandler := handlers.NewPersonHandler(personRepo)
 	passwordHandler := handlers.NewPasswordHandler(passwordRepo)
 	tableHandler := handlers.NewTableHandler(db)
+	adminHandler := handlers.NewAdminHandler(cfg)
 
 	// Initialize router
 	router := gin.Default()
@@ -205,6 +206,10 @@ func main() {
 
 			protected.GET("/phone-types", tableHandler.ListRecords("phone-types"))
 			protected.GET("/phone-types/:id", tableHandler.GetRecord("phone-types"))
+
+			// Admin routes for backup and restore
+			protected.GET("/admin/backup", adminHandler.Backup)
+			protected.POST("/admin/restore", adminHandler.Restore)
 		}
 	}
 

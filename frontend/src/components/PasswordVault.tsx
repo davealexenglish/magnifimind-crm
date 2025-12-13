@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiFetch } from '../utils/api';
 import { PasswordEntry, PasswordCollection, PasswordState } from '../utils/passwordStateManager';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -64,11 +65,7 @@ const PasswordVault = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/v1/passwords', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await apiFetch('/api/v1/passwords');
       const data = await response.json();
       console.log('Load passwords response:', data);
       console.log('Number of passwords:', data.passwords?.length || 0);
@@ -196,10 +193,9 @@ const PasswordVault = () => {
       const url = wasNew ? '/api/v1/passwords' : `/api/v1/passwords/${entry.id}`;
       const method = wasNew ? 'POST' : 'PUT';
       console.log('Saving password:', { url, method, payload: { ...payload, password: '[ENCRYPTED]' } });
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(payload)
@@ -248,11 +244,8 @@ const PasswordVault = () => {
     setDeleteModal({ isOpen: false, passwordId: null, description: '' });
     setLoading(true);
     try {
-      const response = await fetch(`/api/v1/passwords/${passwordId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      const response = await apiFetch(`/api/v1/passwords/${passwordId}`, {
+        method: 'DELETE'
       });
       if (!response.ok) throw new Error('Delete failed');
       passwords.remove(passwordId);

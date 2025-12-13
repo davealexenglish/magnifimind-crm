@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../utils/api'
 
 interface Person {
   pdat_person_id: number
@@ -47,11 +48,7 @@ function PersonPicker({ onSelect, onCancel, selectedPersonId }: PersonPickerProp
       const queryString = params.toString()
       const url = queryString ? `/api/v1/people?${queryString}` : '/api/v1/people'
 
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
+      const response = await apiFetch(url)
 
       if (!response.ok) throw new Error('Failed to search people')
       const data = await response.json()
