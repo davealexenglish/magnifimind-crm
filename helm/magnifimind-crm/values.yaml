@@ -33,7 +33,7 @@ backend:
   enabled: true
   image:
     repository: magnifimind-crm-backend
-    tag: "0.1.11"
+    tag: "0.1.13"
   replicas: 1
   resources:
     requests:
@@ -67,7 +67,7 @@ frontend:
   enabled: true
   image:
     repository: magnifimind-crm-frontend
-    tag: "0.1.10"
+    tag: "0.1.24"
   replicas: 1
   resources:
     requests:
