@@ -24,6 +24,19 @@ const PasswordVault = () => {
   const [filter, setFilter] = useState('');
   const [linkModal, setLinkModal] = useState({ isOpen: false, passwordId: null, linkUrl: '' });
   const [navWarningModal, setNavWarningModal] = useState({ isOpen: false, destination: '' });
+  const [importModal, setImportModal] = useState({
+    isOpen: false,
+    file: null,
+    importing: false,
+    progress: 0,
+    total: 0,
+    results: null,
+    hasHeaders: false,
+    colDescription: 2,
+    colUsername: 3,
+    colPassword: 4,
+    colLink: 6
+  });
 
   // Check if there are unsaved changes
   const hasUnsavedChanges = useMemo(() => {
@@ -65,7 +78,7 @@ const PasswordVault = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiFetch('/api/v1/passwords');
+      const response = await apiFetch('/api/v1/passwords?limit=10000');
       const data = await response.json();
       console.log('Load passwords response:', data);
       console.log('Number of passwords:', data.passwords?.length || 0);
@@ -279,6 +292,141 @@ const PasswordVault = () => {
     setVersion(v => v + 1);
   };
 
+  // CSV Import functions
+  const parseCSV = (text, hasHeaders, colDesc, colUser, colPass, colLink) => {
+    let lines = text.split('\n').filter(line => line.trim());
+    // Skip header row if specified
+    if (hasHeaders && lines.length > 0) {
+      lines = lines.slice(1);
+    }
+    const results = [];
+    // Convert 1-based column positions to 0-based indices
+    const descIdx = colDesc - 1;
+    const userIdx = colUser - 1;
+    const passIdx = colPass - 1;
+    const linkIdx = colLink ? colLink - 1 : -1;
+
+    for (const line of lines) {
+      // Simple CSV parsing (handles basic cases)
+      const cols = line.split(',');
+      const minCols = Math.max(descIdx, userIdx, passIdx) + 1;
+      if (cols.length >= minCols) {
+        results.push({
+          description: cols[descIdx]?.trim() || '',
+          username: cols[userIdx]?.trim() || '',
+          password: cols[passIdx]?.trim() || '',
+          link: linkIdx >= 0 && cols[linkIdx] ? cols[linkIdx].trim() : ''
+        });
+      }
+    }
+    return results;
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImportModal({ ...importModal, file, results: null });
+    }
+  };
+
+  const startImport = async () => {
+    if (!importModal.file) {
+      setError('Please select a CSV file');
+      return;
+    }
+    if (!masterPassword) {
+      setError('Please enter master password to encrypt imported passwords');
+      return;
+    }
+
+    setImportModal(prev => ({ ...prev, importing: true, progress: 0, results: null }));
+    setError(null);
+
+    try {
+      const text = await importModal.file.text();
+      const parsed = parseCSV(
+        text,
+        importModal.hasHeaders,
+        importModal.colDescription,
+        importModal.colUsername,
+        importModal.colPassword,
+        importModal.colLink
+      );
+      const total = parsed.length;
+      setImportModal(prev => ({ ...prev, total }));
+
+      const { encryptPassword } = await import('../utils/passwordEncryption');
+      let success = 0;
+      let failed = 0;
+      const errors = [];
+
+      for (let i = 0; i < parsed.length; i++) {
+        const row = parsed[i];
+        try {
+          // Encrypt the password
+          const encryptedPassword = await encryptPassword(row.password, masterPassword);
+
+          // Save to API
+          const payload = {
+            description: row.description,
+            name: row.username,
+            password: encryptedPassword,
+            linkUrl: row.link || null
+          };
+
+          const response = await apiFetch('/api/v1/passwords', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Save failed');
+          }
+
+          success++;
+        } catch (err) {
+          failed++;
+          errors.push(`Row ${i + 1} (${row.description}): ${err.message}`);
+        }
+
+        setImportModal(prev => ({ ...prev, progress: i + 1 }));
+      }
+
+      setImportModal(prev => ({
+        ...prev,
+        importing: false,
+        results: { success, failed, errors }
+      }));
+
+      // Reload passwords to show new entries
+      if (success > 0) {
+        await loadPasswords();
+      }
+
+    } catch (err) {
+      setError('Import failed: ' + err.message);
+      setImportModal(prev => ({ ...prev, importing: false }));
+    }
+  };
+
+  const closeImportModal = () => {
+    setImportModal({
+      isOpen: false,
+      file: null,
+      importing: false,
+      progress: 0,
+      total: 0,
+      results: null,
+      hasHeaders: false,
+      colDescription: 2,
+      colUsername: 3,
+      colPassword: 4,
+      colLink: 6
+    });
+  };
+
   const openLinkModal = (passwordId) => {
     const entry = passwords.get(passwordId);
     if (entry) {
@@ -397,9 +545,14 @@ const PasswordVault = () => {
       {loading && <div style={{ marginBottom: '20px' }}>Loading...</div>}
 
       {/* Add New Password Button */}
-      <button onClick={addNewPassword} style={{ padding: '10px 20px', marginBottom: '20px', fontSize: '16px' }}>
-        + Add New Password
-      </button>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+        <button onClick={addNewPassword} style={{ padding: '10px 20px', fontSize: '16px' }}>
+          + Add New Password
+        </button>
+        <button onClick={() => setImportModal({ ...importModal, isOpen: true })} style={{ padding: '10px 20px', fontSize: '16px' }}>
+          Import CSV
+        </button>
+      </div>
 
       {/* Password List Table */}
       <div style={{ overflowX: 'auto' }}>
@@ -693,6 +846,191 @@ const PasswordVault = () => {
         onCancel={() => setNavWarningModal({ isOpen: false, destination: '' })}
         isDangerous={true}
       />
+
+      {/* Import CSV Modal */}
+      {importModal.isOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '30px',
+            borderRadius: '8px',
+            minWidth: '500px',
+            maxWidth: '600px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+          }}>
+            <h3 style={{ marginTop: 0 }}>Import Passwords from CSV</h3>
+
+            {!importModal.results ? (
+              <>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>CSV File:</label>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleImportFile}
+                    disabled={importModal.importing}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                      type="checkbox"
+                      checked={importModal.hasHeaders}
+                      onChange={(e) => setImportModal({ ...importModal, hasHeaders: e.target.checked })}
+                      disabled={importModal.importing}
+                    />
+                    <span>First row contains headers (skip it)</span>
+                  </label>
+                </div>
+
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                  <p style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>Column Positions (1-based):</p>
+                  <p style={{ margin: '0 0 15px 0', fontSize: '12px', color: '#666' }}>
+                    Enter the column number for each field. Column 1 is the first column. Leave Link blank or 0 if not present.
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px' }}>Description:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={importModal.colDescription}
+                        onChange={(e) => setImportModal({ ...importModal, colDescription: parseInt(e.target.value) || 1 })}
+                        disabled={importModal.importing}
+                        style={{ width: '60px', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px' }}>Username:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={importModal.colUsername}
+                        onChange={(e) => setImportModal({ ...importModal, colUsername: parseInt(e.target.value) || 1 })}
+                        disabled={importModal.importing}
+                        style={{ width: '60px', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px' }}>Password:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={importModal.colPassword}
+                        onChange={(e) => setImportModal({ ...importModal, colPassword: parseInt(e.target.value) || 1 })}
+                        disabled={importModal.importing}
+                        style={{ width: '60px', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px' }}>Link (optional):</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={importModal.colLink}
+                        onChange={(e) => setImportModal({ ...importModal, colLink: parseInt(e.target.value) || 0 })}
+                        disabled={importModal.importing}
+                        style={{ width: '60px', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {!masterPassword && (
+                  <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '4px' }}>
+                    Enter your master password above before importing.
+                  </div>
+                )}
+
+                {importModal.importing && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ marginBottom: '8px' }}>
+                      Importing... {importModal.progress} / {importModal.total}
+                    </div>
+                    <div style={{ width: '100%', height: '20px', backgroundColor: '#e0e0e0', borderRadius: '10px', overflow: 'hidden' }}>
+                      <div style={{
+                        width: `${importModal.total > 0 ? (importModal.progress / importModal.total) * 100 : 0}%`,
+                        height: '100%',
+                        backgroundColor: '#28a745',
+                        transition: 'width 0.3s'
+                      }} />
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={closeImportModal}
+                    disabled={importModal.importing}
+                    style={{ padding: '10px 20px', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: 'white', cursor: 'pointer' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={startImport}
+                    disabled={importModal.importing || !importModal.file || !masterPassword}
+                    style={{
+                      padding: '10px 20px',
+                      border: 'none',
+                      borderRadius: '4px',
+                      backgroundColor: (!importModal.file || !masterPassword) ? '#ccc' : '#007bff',
+                      color: 'white',
+                      cursor: (!importModal.file || !masterPassword) ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {importModal.importing ? 'Importing...' : 'Import'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{
+                    padding: '15px',
+                    backgroundColor: importModal.results.failed === 0 ? '#d4edda' : '#fff3cd',
+                    border: `1px solid ${importModal.results.failed === 0 ? '#c3e6cb' : '#ffc107'}`,
+                    borderRadius: '4px',
+                    marginBottom: '15px'
+                  }}>
+                    <strong>Import Complete:</strong> {importModal.results.success} succeeded, {importModal.results.failed} failed
+                  </div>
+                  {importModal.results.errors.length > 0 && (
+                    <div style={{ maxHeight: '200px', overflow: 'auto', fontSize: '12px', color: '#721c24' }}>
+                      <strong>Errors:</strong>
+                      <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
+                        {importModal.results.errors.map((err, i) => (
+                          <li key={i}>{err}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={closeImportModal}
+                    style={{ padding: '10px 20px', border: 'none', borderRadius: '4px', backgroundColor: '#007bff', color: 'white', cursor: 'pointer' }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
