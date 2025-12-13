@@ -55,7 +55,7 @@ func (r *PasswordRepository) FindByUserID(ctx context.Context, userID int) ([]*m
 	query := `SELECT pdat_passwd_id, descr, name, passwd, opt_link_id, link_url, sec_users_id,
 	                 create_date, create_user, modify_date, modify_user, active_flag
 	          FROM pdat_passwd WHERE sec_users_id = $1 AND active_flag = 'Y'
-	          ORDER BY descr, name`
+	          ORDER BY LOWER(descr), LOWER(name)`
 
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {

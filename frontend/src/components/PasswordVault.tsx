@@ -137,22 +137,6 @@ const PasswordVault = () => {
     }
   };
 
-  const handleDecryptAll = async () => {
-    if (!masterPassword) {
-      setError('Please enter master password first');
-      return;
-    }
-    setLoading(true);
-    const result = await passwords.decryptAll(masterPassword);
-    setLoading(false);
-    if (result.failed > 0) {
-      setError(`Decrypted ${result.success} passwords, ${result.failed} failed`);
-    } else {
-      setError(null);
-    }
-    setVersion(v => v + 1);
-  };
-
   const handleVerifyAll = async () => {
     if (!masterPassword) {
       setError('Please enter master password first');
@@ -179,12 +163,6 @@ const PasswordVault = () => {
     setVerifyResult({ passed, failed, total: encryptedEntries.length });
   };
 
-  const handleLockAll = () => {
-    passwords.lockAll();
-    setMasterPassword('');
-    setVersion(v => v + 1);
-  };
-
   const handleSave = async (passwordId) => {
     const entry = passwords.get(passwordId);
     if (!entry) {
@@ -195,7 +173,10 @@ const PasswordVault = () => {
     // If there's a pre-encrypted password from locking, we don't need master password
     const hasPendingEncrypted = entry._pendingSaveEncrypted;
 
-    if (!hasPendingEncrypted && !masterPassword) {
+    // Only require master password if the password needs encryption
+    // For metadata-only updates on ENCRYPTED entries, password is already encrypted
+    const needsPasswordEncryption = entry.state !== PasswordState.ENCRYPTED;
+    if (!hasPendingEncrypted && needsPasswordEncryption && !masterPassword) {
       setError('Please enter master password to save');
       return;
     }
@@ -381,12 +362,6 @@ const PasswordVault = () => {
           />
           <button onClick={() => setShowMasterPassword(!showMasterPassword)} style={{ padding: '6px 12px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
             {showMasterPassword ? 'Hide' : 'Show'}
-          </button>
-          <button onClick={handleDecryptAll} disabled={!masterPassword || loading} style={{ padding: '6px 12px', backgroundColor: !masterPassword || loading ? '#ccc' : '#28a745', color: 'white', border: 'none', borderRadius: '3px', cursor: !masterPassword || loading ? 'not-allowed' : 'pointer' }}>
-            🔓 Decrypt All
-          </button>
-          <button onClick={handleLockAll} style={{ padding: '6px 12px', backgroundColor: '#ffc107', color: '#212529', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
-            🔒 Lock All
           </button>
           <button onClick={() => setMasterPassword('')} style={{ padding: '6px 12px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
             Clear
