@@ -103,7 +103,7 @@ func (r *PasswordRepository) List(ctx context.Context, userID int, limit, offset
 	query := `SELECT pdat_passwd_id, descr, name, passwd, opt_link_id, link_url, sec_users_id,
 	                 create_date, create_user, modify_date, modify_user, active_flag
 	          FROM pdat_passwd WHERE sec_users_id = $1 AND active_flag = 'Y'
-	          ORDER BY descr, name LIMIT $2 OFFSET $3`
+	          ORDER BY LOWER(descr), LOWER(name) LIMIT $2 OFFSET $3`
 
 	rows, err := r.db.QueryContext(ctx, query, userID, limit, offset)
 	if err != nil {
@@ -204,7 +204,7 @@ func (r *PasswordRepository) Search(ctx context.Context, userID int, searchTerm 
 	                 create_date, create_user, modify_date, modify_user, active_flag
 	          FROM pdat_passwd
 	          WHERE sec_users_id = $1 AND active_flag = 'Y' AND (descr ILIKE $2 OR name ILIKE $2)
-	          ORDER BY descr, name LIMIT $3 OFFSET $4`
+	          ORDER BY LOWER(descr), LOWER(name) LIMIT $3 OFFSET $4`
 
 	rows, err := r.db.QueryContext(ctx, query, userID, "%"+searchTerm+"%", limit, offset)
 	if err != nil {
