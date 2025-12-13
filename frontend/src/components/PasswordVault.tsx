@@ -445,15 +445,11 @@ const PasswordVault = () => {
 
   const stateCounts = passwords.getStateCounts();
 
-  // Filter passwords based on filter text
+  // Filter passwords based on Description only
   const filteredPasswords = passwords.getAll().filter(entry => {
     if (!filter) return true;
     const filterLower = filter.toLowerCase();
-    return (
-      (entry.description || '').toLowerCase().includes(filterLower) ||
-      (entry.name || '').toLowerCase().includes(filterLower) ||
-      (entry.linkUrl || '').toLowerCase().includes(filterLower)
-    );
+    return (entry.description || '').toLowerCase().includes(filterLower);
   });
 
   return (
@@ -467,9 +463,9 @@ const PasswordVault = () => {
       <h1>Password Vault</h1>
 
       {/* Master Password Section */}
-      <div style={{ marginBottom: '20px', padding: '20px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-        <h3>Master Password</h3>
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+      <div style={{ marginBottom: '15px', padding: '12px 15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <strong style={{ marginRight: '5px' }}>Master Password:</strong>
           <input
             type={showMasterPassword ? 'text' : 'password'}
             value={masterPassword}
@@ -484,101 +480,95 @@ const PasswordVault = () => {
             data-1p-ignore="true"
             name="master-key-input"
             id="master-key-input"
-            style={{ flex: '1', minWidth: '200px', padding: '8px' }}
+            style={{ width: '200px', padding: '6px 8px' }}
           />
-          <button onClick={() => setShowMasterPassword(!showMasterPassword)} style={{ padding: '8px 16px' }}>
+          <button onClick={() => setShowMasterPassword(!showMasterPassword)} style={{ padding: '6px 12px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
             {showMasterPassword ? 'Hide' : 'Show'}
           </button>
-          <button onClick={handleDecryptAll} disabled={!masterPassword || loading} style={{ padding: '8px 16px' }}>
-            Decrypt All
+          <button onClick={handleDecryptAll} disabled={!masterPassword || loading} style={{ padding: '6px 12px', backgroundColor: !masterPassword || loading ? '#ccc' : '#28a745', color: 'white', border: 'none', borderRadius: '3px', cursor: !masterPassword || loading ? 'not-allowed' : 'pointer' }}>
+            🔓 Decrypt All
           </button>
-          <button onClick={handleLockAll} style={{ padding: '8px 16px' }}>
-            Lock All
+          <button onClick={handleLockAll} style={{ padding: '6px 12px', backgroundColor: '#ffc107', color: '#212529', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
+            🔒 Lock All
           </button>
-          <button onClick={() => setMasterPassword('')} style={{ padding: '8px 16px' }}>
+          <button onClick={() => setMasterPassword('')} style={{ padding: '6px 12px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
             Clear
           </button>
+          <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#666' }}>
+            Total: {passwords.getAll().length} | 🔒 {stateCounts[PasswordState.ENCRYPTED]} | 🔓 {stateCounts[PasswordState.DECRYPTED]} | ✎ {stateCounts[PasswordState.MODIFIED_DECRYPTED]} | ✚ {stateCounts[PasswordState.NEW]}
+          </span>
         </div>
-        <small style={{ color: '#666' }}>
+        <small style={{ color: '#888', fontSize: '11px' }}>
           Master password is NEVER sent to the server. Encryption/decryption happens in your browser only.
         </small>
-        <div style={{ marginTop: '10px', fontSize: '14px' }}>
-          Total: {passwords.getAll().length} |
-          Encrypted: {stateCounts[PasswordState.ENCRYPTED]} |
-          Decrypted: {stateCounts[PasswordState.DECRYPTED]} |
-          Modified: {stateCounts[PasswordState.MODIFIED_DECRYPTED]} |
-          New: {stateCounts[PasswordState.NEW]}
-        </div>
       </div>
 
-      {/* Filter Section */}
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+      {/* Filter and Action Buttons */}
+      <div style={{ marginBottom: '10px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
         <label style={{ fontWeight: 'bold' }}>Filter:</label>
         <input
           type="text"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="Filter by description, username, or link..."
-          style={{ flex: '1', maxWidth: '400px', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+          placeholder="Filter by description..."
+          style={{ flex: '1', maxWidth: '300px', padding: '6px 8px', border: '1px solid #ccc', borderRadius: '4px' }}
         />
         {filter && (
-          <button onClick={() => setFilter('')} style={{ padding: '8px 16px' }}>
+          <button onClick={() => setFilter('')} style={{ padding: '5px 10px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
             Clear
           </button>
         )}
-        <span style={{ color: '#666', fontSize: '14px' }}>
-          Showing {filteredPasswords.length} of {passwords.getAll().length}
+        <span style={{ color: '#666', fontSize: '13px' }}>
+          {filteredPasswords.length} / {passwords.getAll().length}
         </span>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+          <button onClick={addNewPassword} style={{ padding: '6px 14px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
+            ✚ Add New
+          </button>
+          <button onClick={() => setImportModal({ ...importModal, isOpen: true })} style={{ padding: '6px 14px', backgroundColor: '#17a2b8', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
+            📥 Import CSV
+          </button>
+        </div>
       </div>
 
       {/* Error/Success Messages */}
       {error && (
-        <div style={{ padding: '10px', marginBottom: '20px', backgroundColor: '#f8d7da', color: '#721c24', border: '1px solid #f5c6cb', borderRadius: '5px' }}>
+        <div style={{ padding: '8px 12px', marginBottom: '10px', backgroundColor: '#f8d7da', color: '#721c24', border: '1px solid #f5c6cb', borderRadius: '4px', fontSize: '13px' }}>
           {error}
         </div>
       )}
       {copySuccess && (
-        <div style={{ padding: '10px', marginBottom: '20px', backgroundColor: '#d4edda', color: '#155724', border: '1px solid #c3e6cb', borderRadius: '5px' }}>
+        <div style={{ padding: '8px 12px', marginBottom: '10px', backgroundColor: '#d4edda', color: '#155724', border: '1px solid #c3e6cb', borderRadius: '4px', fontSize: '13px' }}>
           {copySuccess}
         </div>
       )}
-      {loading && <div style={{ marginBottom: '20px' }}>Loading...</div>}
-
-      {/* Add New Password Button */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <button onClick={addNewPassword} style={{ padding: '10px 20px', fontSize: '16px' }}>
-          + Add New Password
-        </button>
-        <button onClick={() => setImportModal({ ...importModal, isOpen: true })} style={{ padding: '10px 20px', fontSize: '16px' }}>
-          Import CSV
-        </button>
-      </div>
+      {loading && <div style={{ marginBottom: '10px', fontSize: '13px' }}>Loading...</div>}
 
       {/* Password List Table */}
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd', fontSize: '13px' }}>
           <thead>
             <tr style={{ backgroundColor: '#f5f5f5' }}>
-              <th style={{ padding: '12px', border: '1px solid #ddd', textAlign: 'left' }}>Description</th>
-              <th style={{ padding: '12px', border: '1px solid #ddd', textAlign: 'left' }}>Username</th>
-              <th style={{ padding: '12px', border: '1px solid #ddd', textAlign: 'left', minWidth: '200px' }}>Password</th>
-              <th style={{ padding: '12px', border: '1px solid #ddd', textAlign: 'center' }}>Link</th>
-              <th style={{ padding: '12px', border: '1px solid #ddd', textAlign: 'left' }}>Status</th>
-              <th style={{ padding: '12px', border: '1px solid #ddd', textAlign: 'center' }}>Actions</th>
+              <th style={{ padding: '6px 8px', border: '1px solid #ddd', textAlign: 'left', width: '28%' }}>Description</th>
+              <th style={{ padding: '6px 8px', border: '1px solid #ddd', textAlign: 'left', width: '22%' }}>Username</th>
+              <th style={{ padding: '6px 8px', border: '1px solid #ddd', textAlign: 'left', width: '22%' }}>Password</th>
+              <th style={{ padding: '6px 8px', border: '1px solid #ddd', textAlign: 'center', width: '8%' }}>Link</th>
+              <th style={{ padding: '6px 8px', border: '1px solid #ddd', textAlign: 'center', width: '8%' }}>Status</th>
+              <th style={{ padding: '6px 8px', border: '1px solid #ddd', textAlign: 'center', width: '12%' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredPasswords.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-                  {filter ? 'No passwords match the filter.' : 'No passwords saved. Click "Add New Password" to create one.'}
+                <td colSpan={6} style={{ padding: '15px', textAlign: 'center', color: '#999' }}>
+                  {filter ? 'No passwords match the filter.' : 'No passwords saved. Click "Add New" to create one.'}
                 </td>
               </tr>
             ) : (
               filteredPasswords.map((entry, index) => (
                 <tr key={entry.id || `new-${index}`} style={{ borderBottom: '1px solid #ddd' }}>
                   {/* Description */}
-                  <td style={{ padding: '12px', border: '1px solid #ddd' }}>
+                  <td style={{ padding: '4px 6px', border: '1px solid #ddd' }}>
                     <input
                       type="text"
                       value={entry.description || ''}
@@ -589,13 +579,13 @@ const PasswordVault = () => {
                       autoComplete="off"
                       data-form-type="other"
                       data-lpignore="true"
-                      style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '3px' }}
+                      style={{ width: '100%', padding: '4px 6px', border: '1px solid #ccc', borderRadius: '3px', fontSize: '13px' }}
                       placeholder="Description"
                     />
                   </td>
 
                   {/* Username */}
-                  <td style={{ padding: '12px', border: '1px solid #ddd' }}>
+                  <td style={{ padding: '4px 6px', border: '1px solid #ddd' }}>
                     <input
                       type="text"
                       value={entry.name || ''}
@@ -610,17 +600,17 @@ const PasswordVault = () => {
                       data-form-type="other"
                       data-lpignore="true"
                       data-1p-ignore="true"
-                      style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '3px' }}
+                      style={{ width: '100%', padding: '4px 6px', border: '1px solid #ccc', borderRadius: '3px', fontSize: '13px' }}
                       placeholder="Username"
                     />
                   </td>
 
                   {/* Password */}
-                  <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-                    <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                  <td style={{ padding: '4px 6px', border: '1px solid #ddd' }}>
+                    <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
                       <input
                         type="text"
-                        value={entry.isEncrypted() ? '••••••••••' : (entry.password || '')}
+                        value={entry.isEncrypted() ? '••••••' : (entry.password || '')}
                         onChange={(e) => {
                           entry.updatePassword(e.target.value);
                           setVersion(v => v + 1);
@@ -635,11 +625,13 @@ const PasswordVault = () => {
                         data-1p-ignore="true"
                         style={{
                           flex: '1',
-                          padding: '6px',
+                          minWidth: '60px',
+                          padding: '4px 6px',
                           border: '1px solid #ccc',
                           borderRadius: '3px',
                           backgroundColor: entry.isEncrypted() ? '#f5f5f5' : 'white',
-                          fontFamily: entry.isEncrypted() ? 'inherit' : 'monospace'
+                          fontFamily: entry.isEncrypted() ? 'inherit' : 'monospace',
+                          fontSize: '13px'
                         }}
                         placeholder="Password"
                       />
@@ -647,32 +639,34 @@ const PasswordVault = () => {
                         <button
                           onClick={() => handleDecrypt(entry.id)}
                           disabled={!masterPassword}
-                          style={{ padding: '6px 12px', whiteSpace: 'nowrap' }}
+                          style={{ padding: '4px 8px', background: 'none', border: 'none', cursor: !masterPassword ? 'not-allowed' : 'pointer', fontSize: '16px', opacity: !masterPassword ? 0.4 : 1 }}
                           title="Decrypt password"
                         >
-                          Decrypt
+                          🔒
                         </button>
                       ) : (
                         <>
                           <button
                             onClick={() => copyToClipboard(entry.password, entry.description)}
-                            style={{ padding: '6px 12px', whiteSpace: 'nowrap' }}
+                            style={{ padding: '4px 8px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}
                             title="Copy to clipboard"
                           >
-                            Copy
+                            📋
                           </button>
                           <button
                             onClick={() => handleLock(entry.id)}
                             disabled={!entry.password}
                             style={{
-                              padding: '6px 12px',
-                              whiteSpace: 'nowrap',
+                              padding: '4px 8px',
+                              background: 'none',
+                              border: 'none',
                               cursor: !entry.password ? 'not-allowed' : 'pointer',
-                              opacity: !entry.password ? 0.5 : 1
+                              fontSize: '16px',
+                              opacity: !entry.password ? 0.4 : 1
                             }}
                             title={!entry.password ? 'Enter a password first' : 'Lock (encrypt)'}
                           >
-                            Lock
+                            🔑
                           </button>
                         </>
                       )}
@@ -680,65 +674,63 @@ const PasswordVault = () => {
                   </td>
 
                   {/* Link */}
-                  <td style={{ padding: '12px', border: '1px solid #ddd', textAlign: 'center' }}>
+                  <td style={{ padding: '4px 6px', border: '1px solid #ddd', textAlign: 'center' }}>
                     {entry.linkUrl ? (
-                      <a href={entry.linkUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff' }}>
+                      <a href={entry.linkUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff', marginRight: '4px', fontSize: '12px' }}>
                         link
                       </a>
                     ) : (
-                      <span style={{ color: '#999' }}>-</span>
+                      <span style={{ color: '#ccc', marginRight: '4px', fontSize: '12px' }}>-</span>
                     )}
                     <button
                       onClick={() => openLinkModal(entry.id)}
-                      style={{ marginLeft: '8px', padding: '4px 8px', fontSize: '12px' }}
+                      style={{ padding: '2px 4px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}
                       title="Edit link"
                     >
-                      Edit
+                      ✎
                     </button>
                   </td>
 
                   {/* Status */}
-                  <td style={{ padding: '12px', border: '1px solid #ddd', textAlign: 'center' }}>
-                    {entry.state === PasswordState.ENCRYPTED && <span style={{ color: '#666' }}>Encrypted</span>}
-                    {entry.state === PasswordState.DECRYPTED && <span style={{ color: '#28a745' }}>Decrypted</span>}
-                    {entry.state === PasswordState.MODIFIED_DECRYPTED && <span style={{ color: '#ffc107' }}>Modified</span>}
-                    {entry.state === PasswordState.NEW && <span style={{ color: '#17a2b8' }}>New</span>}
+                  <td style={{ padding: '4px 6px', border: '1px solid #ddd', textAlign: 'center' }}>
+                    {entry.state === PasswordState.ENCRYPTED && <span title="Encrypted" style={{ fontSize: '16px' }}>🔒</span>}
+                    {entry.state === PasswordState.DECRYPTED && <span title="Decrypted" style={{ fontSize: '16px' }}>🔑</span>}
+                    {entry.state === PasswordState.MODIFIED_DECRYPTED && <span title="Modified" style={{ color: '#ffc107', fontSize: '16px' }}>✎</span>}
+                    {entry.state === PasswordState.NEW && <span title="New" style={{ color: '#17a2b8', fontSize: '16px' }}>✚</span>}
                   </td>
 
                   {/* Actions */}
-                  <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-                    <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <td style={{ padding: '4px 6px', border: '1px solid #ddd' }}>
+                    <div style={{ display: 'flex', gap: '2px', justifyContent: 'center' }}>
                       <button
                         onClick={() => handleSave(entry.id)}
                         disabled={loading || !needsSave(entry)}
                         style={{
-                          padding: '6px 12px',
-                          whiteSpace: 'nowrap',
-                          backgroundColor: needsSave(entry) ? '#28a745' : '#ccc',
-                          color: 'white',
+                          padding: '4px 8px',
+                          background: 'none',
                           border: 'none',
-                          borderRadius: '3px',
-                          cursor: needsSave(entry) ? 'pointer' : 'not-allowed'
+                          cursor: needsSave(entry) ? 'pointer' : 'not-allowed',
+                          fontSize: '16px',
+                          opacity: needsSave(entry) ? 1 : 0.3
                         }}
                         title={entry._pendingSaveEncrypted ? "Save encrypted changes" : "Save and encrypt"}
                       >
-                        Save
+                        💾
                       </button>
                       <button
                         onClick={() => setDeleteModal({ isOpen: true, passwordId: entry.id, description: entry.description || 'this password' })}
                         disabled={loading || entry.isNew()}
                         style={{
-                          padding: '6px 12px',
-                          whiteSpace: 'nowrap',
-                          backgroundColor: entry.isNew() ? '#ccc' : '#dc3545',
-                          color: 'white',
+                          padding: '4px 8px',
+                          background: 'none',
                           border: 'none',
-                          borderRadius: '3px',
-                          cursor: entry.isNew() ? 'not-allowed' : 'pointer'
+                          cursor: entry.isNew() ? 'not-allowed' : 'pointer',
+                          fontSize: '16px',
+                          opacity: entry.isNew() ? 0.3 : 1
                         }}
                         title="Delete password"
                       >
-                        Delete
+                        🗑
                       </button>
                     </div>
                   </td>

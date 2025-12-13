@@ -67,7 +67,7 @@ frontend:
   enabled: true
   image:
     repository: magnifimind-crm-frontend
-    tag: "0.1.12"
+    tag: "0.1.14"
   replicas: 1
   resources:
     requests:
