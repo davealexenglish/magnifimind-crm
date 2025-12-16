@@ -45,9 +45,47 @@ KUBECONFIG=~/.kube/config-r740 kubectl logs -n magnifimind-crm <pod-name>
 ```
 
 **Current Image Versions** (as of Dec 2025):
-- Frontend: `0.1.9`
-- Backend: `0.1.10`
+- Frontend: `0.1.24`
+- Backend: `0.1.13`
 - Database: `0.1.11`
+
+### AWS Lightsail Deployment (Cloud Option)
+
+Alternative deployment to AWS Lightsail (~$22/month for personal use):
+- **Container Service**: Micro ($7/month) - runs frontend + backend
+- **PostgreSQL Database**: Micro ($15/month) - 40GB storage, managed backups
+
+```bash
+# Deployment script with step-by-step commands
+cd aws/lightsail
+./deploy.sh help              # Show all commands
+./deploy.sh preflight         # Check prerequisites (AWS CLI, Docker, credentials)
+./deploy.sh all               # Run full interactive deployment
+
+# Individual steps
+./deploy.sh ecr               # Create ECR repositories
+./deploy.sh build             # Build and push Docker images to ECR
+./deploy.sh database          # Create Lightsail PostgreSQL (~5-10 min)
+./deploy.sh service           # Create Lightsail container service
+./deploy.sh ecr-access        # Grant Lightsail access to ECR images
+./deploy.sh deploy            # Deploy containers
+./deploy.sh status            # Check deployment status
+./deploy.sh copy-data         # Show instructions to copy data from K8s (optional)
+./deploy.sh cleanup           # DELETE all Lightsail resources
+```
+
+**Key differences from K8s deployment:**
+- Frontend uses `aws/lightsail/nginx.conf` (proxies to `localhost:8080` instead of K8s service name)
+- Images pushed to ECR instead of local registry
+- Environment variables set in `aws/lightsail/containers.json`
+- Database connection uses `DB_SSL_MODE=require`
+
+**Configuration files:**
+- `aws/lightsail/deploy.sh` - Deployment script (edit CONFIG section with your values)
+- `aws/lightsail/containers.json.template` - Container deployment config
+- `aws/lightsail/public-endpoint.json` - Health check and public endpoint config
+- `aws/lightsail/nginx.conf` - Lightsail-specific nginx config
+- `aws/lightsail/Dockerfile.frontend` - Frontend Dockerfile for Lightsail
 
 ## Architecture Overview
 
@@ -215,8 +253,9 @@ POST /api/v1/admin/restore  # Upload and restore backup (multipart form: 'backup
 Required environment variables for backend:
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` - PostgreSQL connection
 - `JWT_SECRET` - JWT signing key
-- `MASTER_PASSWORD` - For password vault encryption (server-side validation only)
 - `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` - Optional for SES email
+
+Note: Password vault encryption is handled entirely client-side (browser). The master password never leaves the client.
 
 Helm values in `helm/magnifimind-crm/values.yaml`:
 - Image tags for `database`, `backend`, `frontend`

@@ -1,0 +1,28 @@
+{
+  "backend": {
+    "image": "369660266796.dkr.ecr.us-east-1.amazonaws.com/magnifimind-backend:0.1.13",
+    "ports": {
+      "8080": "HTTP"
+    },
+    "environment": {
+      "PORT": "8080",
+      "GIN_MODE": "release",
+      "DB_HOST": "ls-95e0723bd816cac5a6f30885bfa7579b1721004f.cuxewk8qqea0.us-east-1.rds.amazonaws.com",
+      "DB_PORT": "5432",
+      "DB_USER": "postgres",
+      "DB_PASSWORD": "n1JyKYns65p33NK4uUByg6R",
+      "DB_NAME": "magnifimind_crm",
+      "DB_SSL_MODE": "require",
+      "JWT_SECRET": "VXlEyyU0A9C3pw8NRrftGbr9iSfOUJKN0LJXXhIABc2trtOY",
+      "JWT_EXPIRATION_HOURS": "24",
+      "AWS_REGION": "us-east-1"
+    }
+  },
+  "frontend": {
+    "image": "369660266796.dkr.ecr.us-east-1.amazonaws.com/magnifimind-frontend:0.1.24",
+    "ports": {
+      "80": "HTTP"
+    },
+    "environment": {}
+  }
+}
