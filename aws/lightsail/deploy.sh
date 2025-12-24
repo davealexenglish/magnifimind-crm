@@ -23,7 +23,7 @@ export AWS_REGION="us-east-1"           # Change to your preferred region
 export AWS_ACCOUNT_ID=""                 # Your AWS account ID (12 digits)
 
 # Image tags (current versions from your K8s deployment)
-export FRONTEND_TAG="0.1.26"
+export FRONTEND_TAG="0.1.28"
 export BACKEND_TAG="0.1.14"
 
 # Credentials (CHANGE THESE for production!)
@@ -359,6 +359,8 @@ deploy_containers() {
             --query 'relationalDatabase.masterEndpoint.address' \
             --output text)
     fi
+    export DB_ENDPOINT
+    print_info "Database endpoint: $DB_ENDPOINT"
 
     # Navigate to project root
     cd "$(dirname "$0")/../.."

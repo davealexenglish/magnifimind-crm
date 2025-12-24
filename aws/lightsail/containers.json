@@ -1,6 +1,6 @@
 {
   "backend": {
-    "image": "369660266796.dkr.ecr.us-east-1.amazonaws.com/magnifimind-backend:0.1.13",
+    "image": "369660266796.dkr.ecr.us-east-1.amazonaws.com/magnifimind-backend:0.1.14",
     "ports": {
       "8080": "HTTP"
     },
@@ -19,7 +19,7 @@
     }
   },
   "frontend": {
-    "image": "369660266796.dkr.ecr.us-east-1.amazonaws.com/magnifimind-frontend:0.1.24",
+    "image": "369660266796.dkr.ecr.us-east-1.amazonaws.com/magnifimind-frontend:0.1.28",
     "ports": {
       "80": "HTTP"
     },
