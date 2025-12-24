@@ -10,6 +10,10 @@
 **/*credential*
 **/master_password.txt
 
+# Exception: Allow password encryption utilities (these are code, not secrets)
+!frontend/src/utils/passwordEncryption.js
+!frontend/src/utils/passwordStateManager.js
+
 # Go
 *.exe
 *.exe~

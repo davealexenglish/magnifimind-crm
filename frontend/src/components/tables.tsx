@@ -81,12 +81,9 @@ export function AccountsTable() {
 export function UsersTable() {
   const columns: TableColumn[] = [
     { field: 'sec_users_id', label: 'ID', readOnly: true, showInTable: false },
-    { field: 'pdat_person_id', label: 'Person ID', type: 'person-picker', showInTable: false },
-    { field: 'person_full_name', label: 'Person', readOnly: true },
-    { field: 'username', label: 'Username' },
-    { field: 'email', label: 'Email', type: 'email' },
-    { field: 'email_verified', label: 'Email Verified', type: 'checkbox', readOnly: true },
-    { field: 'active_flag', label: 'Active', type: 'checkbox' },
+    { field: 'fname', label: 'First Name' },
+    { field: 'lname', label: 'Last Name' },
+    { field: 'create_date', label: 'Created', type: 'date', readOnly: true },
   ]
   return <TableManager title="Users" apiEndpoint="users-table" columns={columns} idField="sec_users_id" />
 }

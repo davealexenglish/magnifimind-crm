@@ -13,6 +13,7 @@ import ConfirmationModal from './ConfirmationModal';
 import VerifyResultsModal from './VerifyResultsModal';
 import ImportCSVModal from './ImportCSVModal';
 import LinkEditModal from './LinkEditModal';
+import AddPasswordModal from './AddPasswordModal';
 
 const PasswordVault = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const PasswordVault = () => {
   const [linkModal, setLinkModal] = useState({ isOpen: false, passwordId: null, linkUrl: '' });
   const [navWarningModal, setNavWarningModal] = useState({ isOpen: false, destination: '' });
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [verifyResult, setVerifyResult] = useState(null); // null, 'checking', { passed: [], failed: [] }
 
   // Check if there are unsaved changes
@@ -292,13 +294,37 @@ const PasswordVault = () => {
     }
   };
 
-  const addNewPassword = () => {
-    const newEntry = PasswordEntry.createNew({
-      description: '',
-      name: '',
-      password: '',
-      linkUrl: ''
+  const handleAddPasswordSave = async (data: { description: string; name: string; password: string; linkUrl: string; isLocked: boolean }) => {
+    // If the password is already locked (encrypted), use it directly
+    // Otherwise, encrypt it before saving
+    let encryptedPassword = data.password;
+
+    if (!data.isLocked) {
+      const { encryptPassword } = await import('../utils/passwordEncryption');
+      encryptedPassword = await encryptPassword(data.password, masterPassword);
+    }
+
+    const payload = {
+      description: data.description,
+      name: data.name,
+      password: encryptedPassword,
+      optionalLink: null,
+      linkUrl: data.linkUrl || null
+    };
+
+    const response = await apiFetch('/api/v1/passwords', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Save failed');
+    }
+
+    const responseData = await response.json();
+    const newEntry = PasswordEntry.fromAPI(responseData);
     passwords.add(newEntry);
     setVersion(v => v + 1);
   };
@@ -403,7 +429,7 @@ const PasswordVault = () => {
               {filteredPasswords.length} / {passwords.getAll().length}
             </span>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
-              <button onClick={addNewPassword} style={{ padding: '6px 14px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
+              <button onClick={() => setShowAddModal(true)} style={{ padding: '6px 14px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
                 ✚ Add New
               </button>
               <button onClick={() => setShowImportModal(true)} style={{ padding: '6px 14px', backgroundColor: '#17a2b8', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
@@ -708,6 +734,14 @@ const PasswordVault = () => {
           setError={setError}
         />
       )}
+
+      {/* Add Password Modal */}
+      <AddPasswordModal
+        isOpen={showAddModal}
+        masterPassword={masterPassword}
+        onSave={handleAddPasswordSave}
+        onClose={() => setShowAddModal(false)}
+      />
 
       {/* Verify Results Modal */}
       {verifyResult && verifyResult !== 'checking' && (

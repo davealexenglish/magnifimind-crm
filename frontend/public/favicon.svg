@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="15" fill="#646cff"/>
+  <!-- Padlock shackle -->
+  <path d="M11 14V10a5 5 0 0 1 10 0v4" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <!-- Padlock body -->
+  <rect x="9" y="14" width="14" height="11" rx="2" fill="white"/>
+  <!-- Keyhole -->
+  <circle cx="16" cy="18.5" r="1.5" fill="#646cff"/>
+  <rect x="15" y="18.5" width="2" height="4" fill="#646cff"/>
+</svg>
