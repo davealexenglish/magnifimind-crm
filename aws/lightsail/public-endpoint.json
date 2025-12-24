@@ -1,0 +1,12 @@
+{
+  "containerName": "frontend",
+  "containerPort": 80,
+  "healthCheck": {
+    "healthyThreshold": 2,
+    "unhealthyThreshold": 2,
+    "timeoutSeconds": 5,
+    "intervalSeconds": 10,
+    "path": "/health",
+    "successCodes": "200"
+  }
+}
