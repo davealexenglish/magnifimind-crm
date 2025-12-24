@@ -49,43 +49,69 @@ KUBECONFIG=~/.kube/config-r740 kubectl logs -n magnifimind-crm <pod-name>
 - Backend: `0.1.13`
 - Database: `0.1.11`
 
-### AWS Lightsail Deployment (Cloud Option)
+### AWS Lightsail Deployment (Production)
 
-Alternative deployment to AWS Lightsail (~$22/month for personal use):
+**Live URL**: https://crm.webcentricds.com
+
+Production deployment on AWS Lightsail (~$22/month):
 - **Container Service**: Micro ($7/month) - runs frontend + backend
 - **PostgreSQL Database**: Micro ($15/month) - 40GB storage, managed backups
+- **Custom Domain**: crm.webcentricds.com with SSL certificate
+- **AWS Profile**: `webcentricds` (account: 369660266796)
 
 ```bash
-# Deployment script with step-by-step commands
+# All commands require AWS_PROFILE=webcentricds
 cd aws/lightsail
-./deploy.sh help              # Show all commands
-./deploy.sh preflight         # Check prerequisites (AWS CLI, Docker, credentials)
-./deploy.sh all               # Run full interactive deployment
 
-# Individual steps
-./deploy.sh ecr               # Create ECR repositories
-./deploy.sh build             # Build and push Docker images to ECR
-./deploy.sh database          # Create Lightsail PostgreSQL (~5-10 min)
-./deploy.sh service           # Create Lightsail container service
-./deploy.sh ecr-access        # Grant Lightsail access to ECR images
-./deploy.sh deploy            # Deploy containers
-./deploy.sh status            # Check deployment status
-./deploy.sh copy-data         # Show instructions to copy data from K8s (optional)
-./deploy.sh cleanup           # DELETE all Lightsail resources
+# Check status
+AWS_PROFILE=webcentricds ./deploy.sh status
+
+# Deployment commands
+AWS_PROFILE=webcentricds ./deploy.sh help       # Show all commands
+AWS_PROFILE=webcentricds ./deploy.sh preflight  # Check prerequisites
+AWS_PROFILE=webcentricds ./deploy.sh build      # Build and push images to ECR
+AWS_PROFILE=webcentricds ./deploy.sh deploy     # Deploy containers
+AWS_PROFILE=webcentricds ./deploy.sh cleanup    # DELETE all resources (destructive!)
+
+# View container logs
+AWS_PROFILE=webcentricds aws lightsail get-container-log \
+    --service-name magnifimind-crm \
+    --container-name backend \
+    --region us-east-1
 ```
+
+**Current Deployment** (as of Dec 2025):
+- Frontend: `0.1.24` (ECR: 369660266796.dkr.ecr.us-east-1.amazonaws.com/magnifimind-frontend)
+- Backend: `0.1.13` (ECR: 369660266796.dkr.ecr.us-east-1.amazonaws.com/magnifimind-backend)
+- Database: Lightsail PostgreSQL `magnifimind-db`
+- Certificate: `webcentricds-crm-cert`
 
 **Key differences from K8s deployment:**
 - Frontend uses `aws/lightsail/nginx.conf` (proxies to `localhost:8080` instead of K8s service name)
-- Images pushed to ECR instead of local registry
+- Images pushed to ECR instead of local registry (192.168.1.200:5000)
 - Environment variables set in `aws/lightsail/containers.json`
 - Database connection uses `DB_SSL_MODE=require`
+- Database is private (not publicly accessible)
 
 **Configuration files:**
-- `aws/lightsail/deploy.sh` - Deployment script (edit CONFIG section with your values)
-- `aws/lightsail/containers.json.template` - Container deployment config
+- `aws/lightsail/deploy.sh` - Deployment script (credentials already configured)
+- `aws/lightsail/containers.json` - Generated container config with DB endpoint
+- `aws/lightsail/containers.json.template` - Template for container config
 - `aws/lightsail/public-endpoint.json` - Health check and public endpoint config
 - `aws/lightsail/nginx.conf` - Lightsail-specific nginx config
 - `aws/lightsail/Dockerfile.frontend` - Frontend Dockerfile for Lightsail
+
+**Deploying Updates:**
+```bash
+cd /path/to/magnifimind-crm
+
+# 1. Update version tags in aws/lightsail/deploy.sh
+# 2. Build and push new images
+AWS_PROFILE=webcentricds ./aws/lightsail/deploy.sh build
+
+# 3. Deploy
+AWS_PROFILE=webcentricds ./aws/lightsail/deploy.sh deploy
+```
 
 ## Architecture Overview
 

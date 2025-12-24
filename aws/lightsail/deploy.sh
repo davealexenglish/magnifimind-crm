@@ -5,6 +5,12 @@
 # This script deploys MagnifiMind CRM to AWS Lightsail as an alternative
 # to the K8s/Helm deployment. Both deployment options can coexist.
 #
+# IMPORTANT: Run with AWS_PROFILE=webcentricds
+#   Example: AWS_PROFILE=webcentricds ./deploy.sh status
+#
+# Live URL: https://crm.webcentricds.com
+# AWS Account: 369660266796 (webcentricds)
+#
 
 set -e
 
