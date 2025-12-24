@@ -23,8 +23,8 @@ export AWS_REGION="us-east-1"           # Change to your preferred region
 export AWS_ACCOUNT_ID=""                 # Your AWS account ID (12 digits)
 
 # Image tags (current versions from your K8s deployment)
-export FRONTEND_TAG="0.1.24"
-export BACKEND_TAG="0.1.13"
+export FRONTEND_TAG="0.1.26"
+export BACKEND_TAG="0.1.14"
 
 # Credentials (CHANGE THESE for production!)
 export DB_PASSWORD="n1JyKYns65p33NK4uUByg6R"

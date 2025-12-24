@@ -103,8 +103,8 @@ var tableConfigs = map[string]TableConfig{
 	"users": {
 		TableName:  "sec_users",
 		IDColumn:   "sec_users_id",
-		Columns:    []string{"sec_users_id", "pdat_person_id", "email", "email_verified", "active_flag", "create_date", "create_user", "modify_date", "modify_user"},
-		OrderBy:    "sec_users_id",
+		Columns:    []string{"sec_users_id", "fname", "lname", "create_date", "create_user", "modify_date", "modify_user"},
+		OrderBy:    "lname, fname",
 		CreateUser: true,
 	},
 	"roles": {
