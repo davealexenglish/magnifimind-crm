@@ -7,11 +7,6 @@ function Dashboard() {
       icon: '📇',
       items: [
         { name: 'People', path: '/people', icon: '👤' },
-        { name: 'Addresses', path: '/addresses', icon: '📍' },
-        { name: 'Email Addresses', path: '/emails', icon: '📧' },
-        { name: 'Phone Numbers', path: '/phones', icon: '📱' },
-        { name: 'Notes', path: '/notes', icon: '📝' },
-        { name: 'Links', path: '/links', icon: '🔗' },
       ]
     },
     {

@@ -44,9 +44,9 @@ KUBECONFIG=~/.kube/config-r740 kubectl get pods -n magnifimind-crm
 KUBECONFIG=~/.kube/config-r740 kubectl logs -n magnifimind-crm <pod-name>
 ```
 
-**Current Image Versions** (as of Dec 2025):
-- Frontend: `0.1.26`
-- Backend: `0.1.14`
+**Current Image Versions** (as of Jan 2026):
+- Frontend: `0.1.32`
+- Backend: `0.1.15`
 - Database: `0.1.11`
 
 ### AWS Lightsail Deployment (Production)
@@ -81,7 +81,7 @@ AWS_PROFILE=webcentricds aws lightsail get-container-log \
 ```
 
 **Current Deployment** (as of Dec 2025):
-- Frontend: `0.1.26` (ECR: 369660266796.dkr.ecr.us-east-1.amazonaws.com/magnifimind-frontend)
+- Frontend: `0.1.28` (ECR: 369660266796.dkr.ecr.us-east-1.amazonaws.com/magnifimind-frontend)
 - Backend: `0.1.14` (ECR: 369660266796.dkr.ecr.us-east-1.amazonaws.com/magnifimind-backend)
 - Database: Lightsail PostgreSQL `magnifimind-db`
 - Certificate: `webcentricds-crm-cert`

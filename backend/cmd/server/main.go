@@ -155,6 +155,7 @@ func main() {
 			// People (using generic handler)
 			protected.GET("/people", tableHandler.ListRecords("people"))
 			protected.GET("/people/:id", tableHandler.GetRecord("people"))
+			protected.GET("/people/:id/full", tableHandler.GetPersonFull)
 			protected.DELETE("/people/:id", tableHandler.DeleteRecord("people"))
 			// Hard delete routes for people (permanent deletion with CASCADE)
 			protected.DELETE("/people/:id/hard", personHandler.HardDeletePerson)
@@ -163,26 +164,36 @@ func main() {
 			// Addresses
 			protected.GET("/addresses", tableHandler.ListRecords("addresses"))
 			protected.GET("/addresses/:id", tableHandler.GetRecord("addresses"))
+			protected.POST("/addresses", tableHandler.CreateRecord("addresses"))
+			protected.PUT("/addresses/:id", tableHandler.UpdateRecord("addresses"))
 			protected.DELETE("/addresses/:id", tableHandler.DeleteRecord("addresses"))
 
 			// Emails
 			protected.GET("/emails", tableHandler.ListRecords("emails"))
 			protected.GET("/emails/:id", tableHandler.GetRecord("emails"))
+			protected.POST("/emails", tableHandler.CreateRecord("emails"))
+			protected.PUT("/emails/:id", tableHandler.UpdateRecord("emails"))
 			protected.DELETE("/emails/:id", tableHandler.DeleteRecord("emails"))
 
 			// Phones
 			protected.GET("/phones", tableHandler.ListRecords("phones"))
 			protected.GET("/phones/:id", tableHandler.GetRecord("phones"))
+			protected.POST("/phones", tableHandler.CreateRecord("phones"))
+			protected.PUT("/phones/:id", tableHandler.UpdateRecord("phones"))
 			protected.DELETE("/phones/:id", tableHandler.DeleteRecord("phones"))
 
 			// Notes
 			protected.GET("/notes", tableHandler.ListRecords("notes"))
 			protected.GET("/notes/:id", tableHandler.GetRecord("notes"))
+			protected.POST("/notes", tableHandler.CreateRecord("notes"))
+			protected.PUT("/notes/:id", tableHandler.UpdateRecord("notes"))
 			protected.DELETE("/notes/:id", tableHandler.DeleteRecord("notes"))
 
 			// Links
 			protected.GET("/links", tableHandler.ListRecords("links"))
 			protected.GET("/links/:id", tableHandler.GetRecord("links"))
+			protected.POST("/links", tableHandler.CreateRecord("links"))
+			protected.PUT("/links/:id", tableHandler.UpdateRecord("links"))
 			protected.DELETE("/links/:id", tableHandler.DeleteRecord("links"))
 
 			// Accounts
