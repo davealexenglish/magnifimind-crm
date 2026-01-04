@@ -5,13 +5,8 @@ import Layout from './components/Layout'
 import Dashboard from './components/Dashboard'
 import PasswordVault from './components/PasswordVault'
 import BackupRestore from './components/BackupRestore'
-import PeopleTable from './components/PeopleTable'
+import PeopleManager from './components/PeopleManager'
 import {
-  AddressesTable,
-  EmailsTable,
-  PhonesTable,
-  NotesTable,
-  LinksTable,
   AccountsTable,
   UsersTable,
   RolesTable
@@ -43,27 +38,7 @@ function App() {
           {/* Contact Management */}
           <Route
             path="/people"
-            element={<ProtectedRoute><PeopleTable /></ProtectedRoute>}
-          />
-          <Route
-            path="/addresses"
-            element={<ProtectedRoute><AddressesTable /></ProtectedRoute>}
-          />
-          <Route
-            path="/emails"
-            element={<ProtectedRoute><EmailsTable /></ProtectedRoute>}
-          />
-          <Route
-            path="/phones"
-            element={<ProtectedRoute><PhonesTable /></ProtectedRoute>}
-          />
-          <Route
-            path="/notes"
-            element={<ProtectedRoute><NotesTable /></ProtectedRoute>}
-          />
-          <Route
-            path="/links"
-            element={<ProtectedRoute><LinksTable /></ProtectedRoute>}
+            element={<ProtectedRoute><PeopleManager /></ProtectedRoute>}
           />
 
           {/* Security */}

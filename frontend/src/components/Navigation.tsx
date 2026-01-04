@@ -36,11 +36,6 @@ function Navigation() {
       icon: '📇',
       items: [
         { name: 'People', path: '/people', icon: '👤' },
-        { name: 'Addresses', path: '/addresses', icon: '📍' },
-        { name: 'Emails', path: '/emails', icon: '📧' },
-        { name: 'Phones', path: '/phones', icon: '📱' },
-        { name: 'Notes', path: '/notes', icon: '📝' },
-        { name: 'Links', path: '/links', icon: '🔗' },
       ]
     },
     {
